@@ -163,32 +163,6 @@ export class CertificateGenerator {
     options: CertificateOptions
   ): Promise<Blob> {
     try {
-      // Inject CSS fix to prevent lab() color function errors
-      if (typeof document !== 'undefined') {
-        const style = document.createElement('style');
-        style.textContent = `
-          * { color-interpolation-filters: sRGB !important; }
-          .bg-gradient-to-br, .bg-gradient-to-r, .bg-gradient-to-l, .bg-gradient-to-t,
-          .bg-gradient-to-bl, .bg-gradient-to-tl, .bg-gradient-to-tr, .bg-gradient-to-b,
-          .bg-gradient-to-br, .bg-gradient-to-l {
-            background-image: none !important;
-            background: #ffffff !important;
-          }
-          [class*="color-mix"], [class*="lab"], [class*="oklch"], [class*="lch"] {
-            color: #000000 !important;
-            background: #ffffff !important;
-          }
-        `;
-        document.head.appendChild(style);
-        
-        // Clean up after generation
-        setTimeout(() => {
-          if (style.parentNode) {
-            style.parentNode.removeChild(style);
-          }
-        }, 5000);
-      }
-
       // Override html2canvas to prevent lab() color function errors
       if (typeof window !== 'undefined') {
         (window as any).__html2canvas_force_simplified_colors__ = true;

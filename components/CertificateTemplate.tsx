@@ -25,7 +25,7 @@ export default function CertificateTemplate({
     switch (template) {
       case "modern":
         return (
-          <div className="relative w-full h-full bg-zinc-900 p-12">
+          <div className="relative w-full h-full bg-zinc-900 p-8 md:p-12">
             <div className="absolute inset-0" style={{ backgroundColor: '#27272a' }}></div>
             <div className="relative z-10 h-full flex flex-col justify-between">
               {/* Header */}
@@ -67,12 +67,12 @@ export default function CertificateTemplate({
 
       case "classic":
         return (
-          <div className="relative w-full h-full bg-white border-8 border-double border-zinc-800 p-12">
+          <div className="relative w-full h-full bg-white border-4 md:border-8 border-double border-zinc-800 p-6 md:p-12">
             {/* Decorative corners */}
-            <div className="absolute top-4 left-4 w-16 h-16 border-t-4 border-l-4 border-zinc-600"></div>
-            <div className="absolute top-4 right-4 w-16 h-16 border-t-4 border-r-4 border-zinc-600"></div>
-            <div className="absolute bottom-4 left-4 w-16 h-16 border-b-4 border-l-4 border-zinc-600"></div>
-            <div className="absolute bottom-4 right-4 w-16 h-16 border-b-4 border-r-4 border-zinc-600"></div>
+            <div className="absolute top-2 left-2 w-8 h-8 md:top-4 md:left-4 md:w-16 md:h-16 border-t-2 md:border-t-4 border-l-2 md:border-l-4 border-zinc-600"></div>
+            <div className="absolute top-2 right-2 w-8 h-8 md:top-4 md:right-4 md:w-16 md:h-16 border-t-2 md:border-t-4 border-r-2 md:border-r-4 border-zinc-600"></div>
+            <div className="absolute bottom-2 left-2 w-8 h-8 md:bottom-4 md:left-4 md:w-16 md:h-16 border-b-2 md:border-b-4 border-l-2 md:border-l-4 border-zinc-600"></div>
+            <div className="absolute bottom-2 right-2 w-8 h-8 md:bottom-4 md:right-4 md:w-16 md:h-16 border-b-2 md:border-b-4 border-r-2 md:border-r-4 border-zinc-600"></div>
 
             <div className="h-full flex flex-col justify-between">
               {/* Header */}
@@ -116,7 +116,7 @@ export default function CertificateTemplate({
 
       default: // default template
         return (
-          <div className="relative w-full h-full bg-blue-50 p-12">
+          <div className="relative w-full h-full bg-blue-50 p-8 md:p-12">
             <div className="absolute inset-0" style={{ backgroundColor: '#ffffff' }}></div>
             <div className="relative z-10 h-full flex flex-col justify-between">
               {/* Header */}

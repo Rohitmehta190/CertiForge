@@ -32,7 +32,9 @@ export default function CertificateViewPage() {
 
   const handleDownload = async (certificate: CertificateRecord) => {
     if (certificate.fileUrl) {
+      // Handle both Firebase URLs and local blob URLs
       if (certificate.fileUrl.startsWith('blob:')) {
+        // For local blob URLs, create a download link
         const link = document.createElement('a');
         link.href = certificate.fileUrl;
         link.download = `${certificate.certificateId}.pdf`;
@@ -40,8 +42,10 @@ export default function CertificateViewPage() {
         link.click();
         document.body.removeChild(link);
       } else if (certificate.fileUrl.startsWith('http')) {
+        // For Firebase URLs, open in new tab
         window.open(certificate.fileUrl, '_blank');
       } else {
+        // Try to get from localStorage for development
         const storedPdf = localStorage.getItem(`certificate_${certificate.certificateId}`);
         if (storedPdf) {
           const link = document.createElement('a');
@@ -92,6 +96,7 @@ export default function CertificateViewPage() {
     <ProtectedRoute>
       <DashboardLayout>
         <div className="space-y-8">
+          {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white mb-2">My Certificates</h1>
@@ -107,6 +112,7 @@ export default function CertificateViewPage() {
             </button>
           </div>
 
+          {/* Certificate Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {certificates.map((certificate) => (
               <div
@@ -114,6 +120,7 @@ export default function CertificateViewPage() {
                 className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-all cursor-pointer"
                 onClick={() => setSelectedCertificate(certificate)}
               >
+                {/* Certificate Preview */}
                 <div className="aspect-[4/3] bg-zinc-800 relative">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
@@ -124,6 +131,7 @@ export default function CertificateViewPage() {
                   </div>
                 </div>
 
+                {/* Certificate Info */}
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -152,30 +160,22 @@ export default function CertificateViewPage() {
                     </div>
                   </div>
 
+                  {/* Action Buttons */}
                   <div className="flex space-x-2 mt-4">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownload(certificate);
-                      }}
+                      onClick={() => handleDownload(certificate)}
                       className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                     >
                       Download
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleVerify(certificate.certificateId);
-                      }}
+                      onClick={() => handleVerify(certificate.certificateId)}
                       className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                     >
                       Verify
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(certificate.certificateId);
-                      }}
+                      onClick={() => handleDelete(certificate.certificateId)}
                       className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                     >
                       Delete
@@ -183,8 +183,9 @@ export default function CertificateViewPage() {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+            </div>
+          ))}
 
           {certificates.length === 0 && (
             <div className="text-center py-12">

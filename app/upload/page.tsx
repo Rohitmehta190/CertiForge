@@ -35,15 +35,9 @@ export default function UploadPage() {
       return;
     }
 
-    console.log("🚀 Starting certificate generation...");
-    console.log("📋 Template:", selectedTemplate);
-    console.log("📊 CSV Data:", csvData);
-    console.log("📝 CSV Data Length:", csvData.length);
-
     setIsGenerating(true);
     
     try {
-      console.log("📦 Importing CertificateGenerator...");
       const { CertificateGenerator } = await import("../../utils/certificateGenerator");
       const { FirebaseService } = await import("../../utils/firebaseService");
 
@@ -54,37 +48,19 @@ export default function UploadPage() {
         baseUrl
       };
 
-      console.log("⚙️ Generation options:", options);
-
       let successCount = 0;
       let errorCount = 0;
-      let currentCertificate = 0;
 
       for (let i = 0; i < csvData.length; i++) {
-        currentCertificate = i + 1;
-        
         try {
-          console.log(`🔄 Generating certificate ${currentCertificate}/${csvData.length} for ${csvData[i].name}...`);
-          console.log("👤 Person:", csvData[i].name);
-          console.log("📧 Email:", csvData[i].email);
-          console.log("📚 Course:", csvData[i].course);
-
           const { certificateId, pdfBlob } = await CertificateGenerator.generateCertificate(
             {
               ...csvData[i],
-              certificateId: `TEMP-${Date.now()}-${i}` // Temporary ID, will be replaced
+              certificateId: `TEMP-${Date.now()}-${i}`
             },
             options
           );
 
-          console.log(`✅ Certificate generated successfully: ${certificateId}`);
-          console.log("📄 PDF Blob size:", pdfBlob.size);
-          
-          if (pdfBlob.size === 0) {
-            throw new Error("Generated PDF is empty");
-          }
-
-          console.log("💾 Saving certificate to Firebase...");
           await FirebaseService.saveCertificate(
             {
               ...csvData[i],
@@ -94,51 +70,22 @@ export default function UploadPage() {
           );
 
           successCount++;
-          console.log(`✅ Successfully saved certificate for ${csvData[i].name}`);
-          
         } catch (error: unknown) {
-          const err = error as { name?: string; message?: string; stack?: string };
+          console.error(`Error generating certificate for ${csvData[i].name}:`, error);
           errorCount++;
-          console.error(`❌ Error generating certificate for ${csvData[i].name}:`, error);
-          console.error("🔍 Error details:", {
-            name: err?.name,
-            message: err?.message,
-            stack: err?.stack
-          });
-          
-          // Continue with next certificate instead of stopping
-          console.log("⏭️ Continuing with next certificate...");
-        }
-
-        // Small delay to prevent overwhelming Firebase
-        if (i < csvData.length - 1) {
-          console.log("⏱️ Waiting 200ms before next certificate...");
-          await new Promise(resolve => setTimeout(resolve, 200));
         }
       }
 
-      console.log(`🏁 Generation complete: ${successCount} success, ${errorCount} errors`);
-
-      // Show completion message
       if (successCount > 0) {
-        alert(`🎉 Successfully generated ${successCount} certificate${successCount > 1 ? 's' : ''}${errorCount > 0 ? ` (${errorCount} failed)` : ''}`);
-        console.log("🔄 Redirecting to certificates page...");
+        alert(`Successfully generated ${successCount} certificate${successCount > 1 ? 's' : ''}`);
         window.location.href = "/certificates";
       } else {
-        alert(`❌ Failed to generate any certificates. Please check your CSV data and try again.\n\nCommon issues:\n- Missing required fields (name, email, course)\n- Invalid email format\n- Empty rows in CSV\n- Network connection issues`);
-        console.error("💥 All certificate generation attempts failed");
+        alert("Failed to generate any certificates. Please check your CSV data and try again.");
       }
     } catch (error: unknown) {
-      const err = error as { name?: string; message?: string; stack?: string };
-      console.error("💥 Fatal error in certificate generation process:", error);
-      console.error("🔍 Full error details:", {
-        name: err?.name,
-        message: err?.message,
-        stack: err?.stack
-      });
-      alert(`💥 A critical error occurred: ${err?.message || 'Unknown error'}. Please check the browser console for details.`);
+      console.error("Error in certificate generation:", error);
+      alert("An error occurred during certificate generation. Please try again.");
     } finally {
-      console.log("🏁 Certificate generation process finished");
       setIsGenerating(false);
     }
   };
@@ -147,7 +94,6 @@ export default function UploadPage() {
     <ProtectedRoute>
       <DashboardLayout>
         <div className="space-y-8">
-          {/* Header */}
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Upload CSV</h1>
             <p className="text-zinc-400">
@@ -156,7 +102,6 @@ export default function UploadPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Upload Section */}
             <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">1. Upload CSV File</h2>
@@ -217,14 +162,12 @@ export default function UploadPage() {
               )}
             </div>
 
-            {/* Preview Section */}
             <div className="space-y-6">
               <div>
                 <h2 className="text-xl font-semibold text-white mb-4">Preview</h2>
                 <CSVPreview data={csvData} />
               </div>
 
-              {/* Instructions */}
               <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
                 <h3 className="text-lg font-semibold text-white mb-4">CSV Format Instructions</h3>
                 <div className="space-y-3 text-sm text-zinc-400">

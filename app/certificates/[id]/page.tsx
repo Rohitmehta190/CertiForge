@@ -6,6 +6,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { FirebaseService, CertificateRecord } from "@/utils/firebaseService";
+import FullscreenCertificate from "@/components/FullscreenCertificate";
+import BackButton from "@/components/BackButton";
 
 export default function CertificateDetailPage() {
   const { user } = useAuth();
@@ -14,6 +16,7 @@ export default function CertificateDetailPage() {
   const [certificate, setCertificate] = useState<CertificateRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("default");
 
   const certificateId = params.id as string;
 
@@ -29,8 +32,17 @@ export default function CertificateDetailPage() {
         const cert = await FirebaseService.getCertificateById(certificateId);
         
         if (!cert) {
-          setError("Certificate not found");
-          console.error("❌ Certificate not found:", certificateId);
+          // Try to find by document ID if certificateId field search failed
+          console.log("🔄 Trying to fetch by document ID...");
+          const certByDocId = await FirebaseService.getCertificateByDocumentId(certificateId);
+          
+          if (!certByDocId) {
+            setError("Certificate not found");
+            console.error("❌ Certificate not found:", certificateId);
+          } else {
+            setCertificate(certByDocId);
+            console.log("✅ Certificate found by document ID:", certByDocId);
+          }
         } else {
           setCertificate(cert);
           console.log("✅ Certificate found:", cert);
@@ -46,6 +58,13 @@ export default function CertificateDetailPage() {
 
     fetchCertificate();
   }, [user, certificateId]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("selectedTemplate");
+    if (saved) {
+      setSelectedTemplate(saved);
+    }
+  }, []);
 
   const handleDownload = async () => {
     if (!certificate) return;
@@ -148,12 +167,11 @@ export default function CertificateDetailPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <button
-                onClick={() => router.push("/certificates")}
-                className="text-zinc-400 hover:text-white mb-2 transition-colors"
-              >
-                ← Back to Certificates
-              </button>
+              <BackButton 
+                to="/certificates" 
+                label="Back to Certificates"
+                className="mb-2"
+              />
               <h1 className="text-3xl font-bold text-white mb-2">Certificate Details</h1>
               <p className="text-zinc-400">
                 View and manage your certificate
@@ -163,83 +181,84 @@ export default function CertificateDetailPage() {
 
           {/* Certificate Card */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-            <div className="aspect-[4/3] bg-zinc-800 relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">🎓</div>
-                  <h2 className="text-2xl font-bold text-white">{certificate.name}</h2>
-                  <p className="text-lg text-zinc-400">{certificate.course}</p>
+            <FullscreenCertificate
+              certificate={{
+                name: certificate.name,
+                course: certificate.course,
+                date: certificate.date,
+                certificateId: certificate.certificateId
+              }}
+              template={selectedTemplate}
+              showControls={true}
+            />
+          </div>
+
+          <div className="p-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Certificate Information */}
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-white mb-4">Certificate Information</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Certificate ID:</span>
+                    <span className="text-white font-mono">{certificate.certificateId}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Recipient Name:</span>
+                    <span className="text-white">{certificate.name}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Email:</span>
+                    <span className="text-white">{certificate.email}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Course:</span>
+                    <span className="text-white">{certificate.course}</span>
+                  </div>
+                  
+                  {certificate.date && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-400">Completion Date:</span>
+                      <span className="text-white">{certificate.date}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400">Issue Date:</span>
+                    <span className="text-white">{certificate.createdAt?.toDate().toLocaleDateString()}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Certificate Information */}
-                <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-white mb-4">Certificate Information</h3>
+              {/* Actions */}
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold text-white mb-4">Actions</h3>
+                
+                <div className="space-y-4">
+                  <button
+                    onClick={handleDownload}
+                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Download Certificate
+                  </button>
                   
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-zinc-400">Certificate ID:</span>
-                      <span className="text-white font-mono">{certificate.certificateId}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-zinc-400">Recipient Name:</span>
-                      <span className="text-white">{certificate.name}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-zinc-400">Email:</span>
-                      <span className="text-white">{certificate.email}</span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-zinc-400">Course:</span>
-                      <span className="text-white">{certificate.course}</span>
-                    </div>
-                    
-                    {certificate.date && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-400">Completion Date:</span>
-                        <span className="text-white">{certificate.date}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-zinc-400">Issue Date:</span>
-                      <span className="text-white">{certificate.createdAt?.toDate().toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-white mb-4">Actions</h3>
+                  <button
+                    onClick={handleVerify}
+                    className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                  >
+                    Verify Certificate
+                  </button>
                   
-                  <div className="space-y-4">
-                    <button
-                      onClick={handleDownload}
-                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      Download Certificate
-                    </button>
-                    
-                    <button
-                      onClick={handleVerify}
-                      className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                    >
-                      Verify Certificate
-                    </button>
-                    
-                    <button
-                      onClick={handleDelete}
-                      className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                    >
-                      Delete Certificate
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleDelete}
+                    className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  >
+                    Delete Certificate
+                  </button>
                 </div>
               </div>
             </div>

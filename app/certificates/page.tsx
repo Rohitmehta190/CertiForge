@@ -5,11 +5,14 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import { FirebaseService, CertificateRecord } from "@/utils/firebaseService";
 import { useAuth } from "@/contexts/AuthContext";
+import CertificatePreview from "@/components/CertificatePreview";
+import BackButton from "@/components/BackButton";
 
 export default function CertificatesPage() {
   const { user } = useAuth();
   const [certificates, setCertificates] = useState<CertificateRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("default");
 
   const fetchCertificates = useCallback(async () => {
     if (!user) return;
@@ -29,6 +32,13 @@ export default function CertificatesPage() {
     fetchCertificates();
   }, [fetchCertificates]);
 
+  useEffect(() => {
+    const saved = localStorage.getItem("selectedTemplate");
+    if (saved) {
+      setSelectedTemplate(saved);
+    }
+  }, []);
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -47,6 +57,11 @@ export default function CertificatesPage() {
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <div>
+              <BackButton 
+                to="/dashboard" 
+                label="Back to Dashboard"
+                className="mb-2"
+              />
               <h1 className="text-3xl font-bold text-white mb-2">My Certificates</h1>
               <p className="text-zinc-400">
                 View and manage all your generated certificates
@@ -67,13 +82,17 @@ export default function CertificatesPage() {
                 className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-all cursor-pointer"
                 onClick={() => window.location.href = `/certificates/${certificate.id}`}
               >
-                <div className="aspect-[4/3] bg-zinc-800 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">🎓</div>
-                      <h3 className="text-lg font-semibold text-white">{certificate.name}</h3>
-                      <p className="text-sm text-zinc-400">{certificate.course}</p>
-                    </div>
+                <div className="aspect-[4/3] bg-zinc-800 relative overflow-hidden">
+                  <div className="absolute inset-0">
+                    <CertificatePreview
+                      certificate={{
+                        name: certificate.name,
+                        course: certificate.course,
+                        date: certificate.date,
+                        certificateId: certificate.certificateId
+                      }}
+                      template={selectedTemplate}
+                    />
                   </div>
                 </div>
 
@@ -119,8 +138,14 @@ export default function CertificatesPage() {
                             link.click();
                             document.body.removeChild(link);
                           } else if (certificate.fileUrl.startsWith('http')) {
-                            // For Firebase URLs, open in new tab
-                            window.open(certificate.fileUrl, '_blank');
+                            // For Firebase URLs, create download link
+                            const link = document.createElement('a');
+                            link.href = certificate.fileUrl;
+                            link.download = `${certificate.certificateId}.pdf`;
+                            link.target = '_blank';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
                           } else {
                             // Try to get from localStorage for development
                             const storedPdf = localStorage.getItem(`certificate_${certificate.certificateId}`);
@@ -136,7 +161,18 @@ export default function CertificatesPage() {
                             }
                           }
                         } else {
-                          alert('Certificate file not available. Please regenerate the certificate.');
+                          // Try to get from localStorage for development
+                          const storedPdf = localStorage.getItem(`certificate_${certificate.certificateId}`);
+                          if (storedPdf) {
+                            const link = document.createElement('a');
+                            link.href = storedPdf;
+                            link.download = `${certificate.certificateId}.pdf`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          } else {
+                            alert('Certificate file not available. Please regenerate the certificate.');
+                          }
                         }
                       }}
                       className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"

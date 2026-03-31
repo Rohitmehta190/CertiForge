@@ -250,8 +250,27 @@ export class FirebaseService {
 
       return null;
     } catch (error) {
-      console.error("Error fetching certificate:", error);
-      throw error;
+      console.error("Error fetching certificate by ID:", error);
+      return null;
+    }
+  }
+
+  static async getCertificateByDocumentId(documentId: string): Promise<CertificateRecord | null> {
+    try {
+      const docRef = doc(db, "certificates", documentId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        return {
+          id: docSnap.id,
+          ...docSnap.data()
+        } as CertificateRecord;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error fetching certificate by document ID:", error);
+      return null;
     }
   }
 

@@ -29,48 +29,6 @@ export default function CertificatesListPage() {
     fetchCertificates();
   }, [fetchCertificates]);
 
-  const handleDownload = async (certificate: CertificateRecord) => {
-    if (certificate.fileUrl) {
-      if (certificate.fileUrl.startsWith('blob:')) {
-        const link = document.createElement('a');
-        link.href = certificate.fileUrl;
-        link.download = `${certificate.certificateId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (certificate.fileUrl.startsWith('http')) {
-        window.open(certificate.fileUrl, '_blank');
-      } else {
-        const storedPdf = localStorage.getItem(`certificate_${certificate.certificateId}`);
-        if (storedPdf) {
-          const link = document.createElement('a');
-          link.href = storedPdf;
-          link.download = `${certificate.certificateId}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } else {
-          alert('Certificate file not available. Please regenerate the certificate.');
-        }
-      }
-    } else {
-      alert('Certificate file not available. Please regenerate the certificate.');
-    }
-  };
-
-  const handleDelete = async (certificateId: string) => {
-    if (confirm("Are you sure you want to delete this certificate?")) {
-      try {
-        await FirebaseService.deleteCertificate(certificateId);
-        setCertificates(certificates.filter(cert => cert.certificateId !== certificateId));
-        alert("Certificate deleted successfully!");
-      } catch (error) {
-        console.error("Error deleting certificate:", error);
-        alert("Failed to delete certificate");
-      }
-    }
-  };
-
   if (loading) {
     return (
       <ProtectedRoute>
@@ -107,7 +65,7 @@ export default function CertificatesListPage() {
               <div
                 key={certificate.certificateId}
                 className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-all cursor-pointer"
-                onClick={() => window.location.href = `/certificates/${certificate.id}`}
+                onClick={() => window.location.href = `/certificate-view?id=${certificate.certificateId}`}
               >
                 <div className="aspect-[4/3] bg-zinc-800 relative">
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -127,7 +85,7 @@ export default function CertificatesListPage() {
                     </div>
                     <div className="text-right">
                       <span className="text-xs text-zinc-500">
-                        {certificate.createdAt?.toDate().toLocaleDateString() || "N/A"}
+                        {certificate.createdAt?.toDate?.toLocaleDateString() || "N/A"}
                       </span>
                     </div>
                   </div>
@@ -149,27 +107,38 @@ export default function CertificatesListPage() {
 
                   <div className="flex space-x-2 mt-4">
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownload(certificate);
+                      onClick={() => {
+                        if (certificate.fileUrl) {
+                          const link = document.createElement("a");
+                          link.href = certificate.fileUrl;
+                          link.download = `${certificate.certificateId}.pdf`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }
                       }}
                       className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                     >
                       Download
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`/verify/${certificate.certificateId}`, "_blank");
-                      }}
+                      onClick={() => window.open(`/verify/${certificate.certificateId}`, "_blank")}
                       className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                     >
                       Verify
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(certificate.id);
+                      onClick={async () => {
+                        if (confirm("Are you sure you want to delete this certificate?")) {
+                          try {
+                            await FirebaseService.deleteCertificate(certificate.certificateId);
+                            setCertificates(certificates.filter(cert => cert.certificateId !== certificate.certificateId));
+                            alert("Certificate deleted successfully!");
+                          } catch (error) {
+                            console.error("Error deleting certificate:", error);
+                            alert("Failed to delete certificate");
+                          }
+                        }
                       }}
                       className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                     >
@@ -178,8 +147,8 @@ export default function CertificatesListPage() {
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
 
           {certificates.length === 0 && (
             <div className="text-center py-12">

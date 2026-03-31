@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import TemplatePreview from "@/components/TemplatePreview";
+import BackButton from "@/components/BackButton";
 
 interface Template {
   id: string;
@@ -98,6 +100,11 @@ export default function TemplatesPage() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
+              <BackButton 
+                to="/dashboard" 
+                label="Back to Dashboard"
+                className="mb-2"
+              />
               <h1 className="text-3xl font-bold text-white mb-2">Certificate Templates</h1>
               <p className="text-zinc-400">
                 Create and manage custom certificate templates
@@ -192,38 +199,11 @@ export default function TemplatesPage() {
 
             {/* Template Preview */}
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-white mb-4">Template Preview</h2>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-                <div className="text-center">
-                  <div className="mb-4">
-                    <span className="text-6xl">
-                      {templates.find(t => t.id === selectedTemplate)?.preview || "🎓"}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">
-                    {templates.find(t => t.id === selectedTemplate)?.name || "Select a template"}
-                  </h3>
-                  <p className="text-zinc-400 mb-4">
-                    {templates.find(t => t.id === selectedTemplate)?.description || "Choose a template to see preview"}
-                  </p>
-                  <div className="flex space-x-4">
-                    <button
-                      onClick={() => window.location.href = "/upload"}
-                      className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium"
-                    >
-                      Use This Template
-                    </button>
-                    {!templates.find(t => t.id === selectedTemplate)?.isDefault && (
-                      <button
-                        onClick={() => handleDeleteTemplate(selectedTemplate)}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-                      >
-                        Delete Template
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <h2 className="text-xl font-semibold text-white mb-4">Live Certificate Preview</h2>
+              <TemplatePreview
+                onSelectTemplate={handleSelectTemplate}
+                selectedTemplate={selectedTemplate}
+              />
             </div>
           </div>
 

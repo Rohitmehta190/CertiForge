@@ -10,8 +10,8 @@ const navigation = [
   { name: "Upload CSV", href: "/upload", icon: "📤" },
   { name: "My Certificates", href: "/certificates", icon: "📜" },
   { name: "Templates", href: "/templates", icon: "🎨" },
+  { name: "Template Builder", href: "/builder", icon: "🛠️" },
   { name: "Verify", href: "/verify", icon: "✅" },
-  { name: "Certificate View", href: "/certificate-view", icon: "📄" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
