@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { auth } from "@/firebase/config";
 import { 
   GoogleAuthProvider, 
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = useCallback(async () => {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
@@ -40,23 +40,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Error signing in with Google:", error);
       throw error;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await signOut(auth);
     } catch (error) {
       console.error("Error signing out:", error);
       throw error;
     }
-  };
+  }, []);
 
-  const value = {
-    user,
-    loading,
-    loginWithGoogle,
-    logout,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      loginWithGoogle,
+      logout,
+    }),
+    [user, loading, loginWithGoogle, logout]
+  );
 
   return (
     <AuthContext.Provider value={value}>

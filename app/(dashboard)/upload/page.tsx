@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import DashboardLayout from "@/components/DashboardLayout";
+import { useRouter } from "next/navigation";
 import CSVUploader from "@/components/CSVUploader";
 import CSVPreview from "@/components/CSVPreview";
 
@@ -14,6 +13,7 @@ interface CSVData {
 }
 
 export default function UploadPage() {
+  const router = useRouter();
   const [csvData, setCsvData] = useState<CSVData[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -38,8 +38,8 @@ export default function UploadPage() {
     setIsGenerating(true);
     
     try {
-      const { CertificateGenerator } = await import("../../utils/certificateGenerator");
-      const { FirebaseService } = await import("../../utils/firebaseService");
+      const { CertificateGenerator } = await import("@/utils/certificateGenerator");
+      const { FirebaseService } = await import("@/utils/firebaseService");
 
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
       const options = {
@@ -78,7 +78,7 @@ export default function UploadPage() {
 
       if (successCount > 0) {
         alert(`Successfully generated ${successCount} certificate${successCount > 1 ? 's' : ''}`);
-        window.location.href = "/certificates";
+        router.push("/certificates");
       } else {
         alert("Failed to generate any certificates. Please check your CSV data and try again.");
       }
@@ -91,9 +91,7 @@ export default function UploadPage() {
   };
 
   return (
-    <ProtectedRoute>
-      <DashboardLayout>
-        <div className="space-y-8">
+    <div className="space-y-8">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Upload CSV</h1>
             <p className="text-zinc-400">
@@ -143,9 +141,10 @@ export default function UploadPage() {
                         <span className="text-white font-medium capitalize">{selectedTemplate}</span>
                       </div>
                       <button
+                        type="button"
                         onClick={handleGenerateCertificates}
                         disabled={isGenerating}
-                        className="w-full px-4 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                        className="w-full px-4 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ease-out font-medium active:scale-[0.99]"
                       >
                         {isGenerating ? (
                           <div className="flex items-center justify-center space-x-2">
@@ -189,8 +188,6 @@ export default function UploadPage() {
               </div>
             </div>
           </div>
-        </div>
-      </DashboardLayout>
-    </ProtectedRoute>
+    </div>
   );
 }

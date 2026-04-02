@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import DashboardLayout from "@/components/DashboardLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { FirebaseService, CertificateRecord } from "@/utils/firebaseService";
 import FullscreenCertificate from "@/components/FullscreenCertificate";
 import BackButton from "@/components/BackButton";
+import { downloadCertificatePdf } from "@/utils/downloadCertificatePdf";
 
 export default function CertificateDetailPage() {
   const { user } = useAuth();
@@ -68,36 +67,15 @@ export default function CertificateDetailPage() {
 
   const handleDownload = async () => {
     if (!certificate) return;
-
-    if (certificate.fileUrl) {
-      // Handle both Firebase URLs and local blob URLs
-      if (certificate.fileUrl.startsWith('blob:')) {
-        // For local blob URLs, create a download link
-        const link = document.createElement('a');
-        link.href = certificate.fileUrl;
-        link.download = `${certificate.certificateId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (certificate.fileUrl.startsWith('http')) {
-        // For Firebase URLs, open in new tab
-        window.open(certificate.fileUrl, '_blank');
-      } else {
-        // Try to get from localStorage for development
-        const storedPdf = localStorage.getItem(`certificate_${certificate.certificateId}`);
-        if (storedPdf) {
-          const link = document.createElement('a');
-          link.href = storedPdf;
-          link.download = `${certificate.certificateId}.pdf`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        } else {
-          alert('Certificate file not available. Please regenerate the certificate.');
-        }
-      }
-    } else {
-      alert('Certificate file not available. Please regenerate the certificate.');
+    try {
+      await downloadCertificatePdf(
+        certificate.certificateId,
+        certificate.fileUrl
+      );
+    } catch {
+      alert(
+        "Could not download the PDF. Try again, or regenerate the certificate. (Saved blob links from another session cannot be downloaded.)"
+      );
     }
   };
 
@@ -124,46 +102,37 @@ export default function CertificateDetailPage() {
 
   if (loading) {
     return (
-      <ProtectedRoute>
-        <DashboardLayout>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
-          </div>
-        </DashboardLayout>
-      </ProtectedRoute>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+      </div>
     );
   }
 
   if (error || !certificate) {
     return (
-      <ProtectedRoute>
-        <DashboardLayout>
-          <div className="space-y-8">
-            <div className="text-center py-12">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 max-w-md mx-auto">
-                <div className="text-6xl mb-4">❌</div>
-                <h3 className="text-xl font-semibold text-white mb-2">Certificate Not Found</h3>
-                <p className="text-zinc-400 mb-6">
-                  {error || "The certificate you're looking for doesn't exist or you don't have permission to view it."}
-                </p>
-                <button
-                  onClick={() => router.push("/certificates")}
-                  className="px-6 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium"
-                >
-                  Back to Certificates
-                </button>
-              </div>
-            </div>
+      <div className="space-y-8">
+        <div className="text-center py-12">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 max-w-md mx-auto">
+            <div className="text-6xl mb-4">❌</div>
+            <h3 className="text-xl font-semibold text-white mb-2">Certificate Not Found</h3>
+            <p className="text-zinc-400 mb-6">
+              {error || "The certificate you're looking for doesn't exist or you don't have permission to view it."}
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push("/certificates")}
+              className="px-6 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all duration-200 ease-out font-medium active:scale-[0.98]"
+            >
+              Back to Certificates
+            </button>
           </div>
-        </DashboardLayout>
-      </ProtectedRoute>
+        </div>
+      </div>
     );
   }
 
   return (
-    <ProtectedRoute>
-      <DashboardLayout>
-        <div className="space-y-8">
+    <div className="space-y-8">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -179,19 +148,18 @@ export default function CertificateDetailPage() {
             </div>
           </div>
 
-          {/* Certificate Card */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-            <FullscreenCertificate
-              certificate={{
-                name: certificate.name,
-                course: certificate.course,
-                date: certificate.date,
-                certificateId: certificate.certificateId
-              }}
-              template={selectedTemplate}
-              showControls={true}
-            />
-          </div>
+          {/* Certificate — immersive preview (fills viewport, no white mat) */}
+          <FullscreenCertificate
+            certificate={{
+              name: certificate.name,
+              course: certificate.course,
+              date: certificate.date,
+              certificateId: certificate.certificateId,
+            }}
+            template={selectedTemplate}
+            showControls={true}
+            immersive
+          />
 
           <div className="p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -240,22 +208,25 @@ export default function CertificateDetailPage() {
                 
                 <div className="space-y-4">
                   <button
+                    type="button"
                     onClick={handleDownload}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 ease-out font-medium active:scale-[0.99]"
                   >
                     Download Certificate
                   </button>
                   
                   <button
+                    type="button"
                     onClick={handleVerify}
-                    className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                    className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 ease-out font-medium active:scale-[0.99]"
                   >
                     Verify Certificate
                   </button>
                   
                   <button
+                    type="button"
                     onClick={handleDelete}
-                    className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                    className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 ease-out font-medium active:scale-[0.99]"
                   >
                     Delete Certificate
                   </button>
@@ -263,8 +234,6 @@ export default function CertificateDetailPage() {
               </div>
             </div>
           </div>
-        </div>
-      </DashboardLayout>
-    </ProtectedRoute>
+    </div>
   );
 }

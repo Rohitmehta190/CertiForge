@@ -135,14 +135,12 @@ export class FirebaseService {
     try {
       console.log("💾 Using local storage fallback...");
       
-      // Create a local download URL for the PDF
-      const localFileUrl = URL.createObjectURL(pdfBlob);
-      
-      // Save certificate data to Firestore (this should work even if Storage fails)
+      // Never persist blob: URLs to Firestore — they stop working after refresh.
+      // PDF bytes are kept in localStorage under certificate_${certificateId} instead.
       const certificateRecord = {
         ...certificateData,
         userId,
-        fileUrl: localFileUrl,
+        fileUrl: "",
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
       };

@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import DashboardLayout from "@/components/DashboardLayout";
-import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import TemplatePreview from "@/components/TemplatePreview";
 import BackButton from "@/components/BackButton";
 
@@ -40,7 +38,7 @@ const defaultTemplates: Template[] = [
 ];
 
 export default function TemplatesPage() {
-  const { user } = useAuth();
+  const router = useRouter();
   const [templates, setTemplates] = useState<Template[]>(defaultTemplates);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("default");
   const [isCreating, setIsCreating] = useState(false);
@@ -94,9 +92,7 @@ export default function TemplatesPage() {
   }, []);
 
   return (
-    <ProtectedRoute>
-      <DashboardLayout>
-        <div className="space-y-8">
+    <div className="space-y-8">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -111,8 +107,9 @@ export default function TemplatesPage() {
               </p>
             </div>
             <button
-              onClick={() => window.location.href = "/upload"}
-              className="px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium"
+              type="button"
+              onClick={() => router.push("/upload")}
+              className="px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all duration-200 ease-out font-medium active:scale-[0.98]"
             >
               Generate Certificates
             </button>
@@ -127,7 +124,7 @@ export default function TemplatesPage() {
                   {templates.map((template) => (
                     <div
                       key={template.id}
-                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      className={`p-4 border rounded-lg cursor-pointer transition-all duration-200 ease-out ${
                         selectedTemplate === template.id
                           ? 'border-white bg-white/10'
                           : 'border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800'
@@ -180,9 +177,10 @@ export default function TemplatesPage() {
                     />
                   </div>
                   <button
+                    type="button"
                     onClick={handleCreateTemplate}
                     disabled={!newTemplateName.trim() || isCreating}
-                    className="w-full px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                    className="w-full px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ease-out font-medium active:scale-[0.99]"
                   >
                     {isCreating ? (
                       <div className="flex items-center justify-center space-x-2">
@@ -214,7 +212,7 @@ export default function TemplatesPage() {
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all"
+                  className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all duration-200 ease-out"
                 >
                   <div className="text-center">
                     <div className="text-4xl mb-4">{template.preview}</div>
@@ -239,7 +237,7 @@ export default function TemplatesPage() {
                     <p className="text-zinc-400 text-sm mb-4">{template.description}</p>
                     
                     <div className="flex items-center justify-between">
-                      <button className="text-sm text-zinc-300 hover:text-white transition-colors">
+                      <button type="button" className="text-sm text-zinc-300 hover:text-white transition-all duration-200 ease-out">
                         Edit Template
                       </button>
                       <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,8 +272,6 @@ export default function TemplatesPage() {
               </div>
             </div>
           </div>
-        </div>
-      </DashboardLayout>
-    </ProtectedRoute>
+    </div>
   );
 }

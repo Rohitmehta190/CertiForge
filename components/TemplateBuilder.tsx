@@ -50,7 +50,24 @@ export default function TemplateBuilder() {
   const [selectedElement, setSelectedElement] = useState<TemplateElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [snapToGrid, setSnapToGrid] = useState(true);
+  const [gridSize, setGridSize] = useState(10);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStateRef = useRef<{
+    handle: "nw" | "ne" | "sw" | "se";
+    startMouseX: number;
+    startMouseY: number;
+    startX: number;
+    startY: number;
+    startW: number;
+    startH: number;
+    elementId: string;
+  } | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const snap = (value: number) => {
+    return Math.round(value / gridSize) * gridSize;
+  };
 
   // Add text element
   const addTextElement = () => {
@@ -156,8 +173,10 @@ export default function TemplateBuilder() {
     if (isDragging && selectedElement) {
       const rect = canvasRef.current?.getBoundingClientRect();
       if (rect) {
-        const newX = event.clientX - rect.left - dragOffset.x;
-        const newY = event.clientY - rect.top - dragOffset.y;
+        const rawX = event.clientX - rect.left - dragOffset.x;
+        const rawY = event.clientY - rect.top - dragOffset.y;
+        const newX = snapToGrid ? snap(rawX) : rawX;
+        const newY = snapToGrid ? snap(rawY) : rawY;
 
         setTemplate(prev => ({
           ...prev,
@@ -167,6 +186,13 @@ export default function TemplateBuilder() {
               : el
           )
         }));
+
+        // Keep the selected element position in sync (important for resize handles).
+        setSelectedElement(prev =>
+          prev
+            ? { ...prev, position: { x: newX, y: newY } }
+            : null
+        );
       }
     }
   };
@@ -174,6 +200,114 @@ export default function TemplateBuilder() {
   // Handle drag end
   const handleDragEnd = () => {
     setIsDragging(false);
+  };
+
+  const startResize = (handle: "nw" | "ne" | "sw" | "se", event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!selectedElement) return;
+    const minSize = 20;
+
+    setIsDragging(false);
+    setIsResizing(true);
+
+    resizeStateRef.current = {
+      handle,
+      startMouseX: event.clientX,
+      startMouseY: event.clientY,
+      startX: selectedElement.position.x,
+      startY: selectedElement.position.y,
+      startW: selectedElement.style.width ?? 200,
+      startH: selectedElement.style.height ?? 100,
+      elementId: selectedElement.id,
+    };
+
+    const onMove = (e: MouseEvent) => {
+      const st = resizeStateRef.current;
+      if (!st) return;
+
+      const dx = e.clientX - st.startMouseX;
+      const dy = e.clientY - st.startMouseY;
+
+      let newX = st.startX;
+      let newY = st.startY;
+      let newW = st.startW;
+      let newH = st.startH;
+
+      if (st.handle === "se") {
+        newW = st.startW + dx;
+        newH = st.startH + dy;
+      } else if (st.handle === "nw") {
+        newX = st.startX + dx;
+        newY = st.startY + dy;
+        newW = st.startW - dx;
+        newH = st.startH - dy;
+      } else if (st.handle === "ne") {
+        newY = st.startY + dy;
+        newW = st.startW + dx;
+        newH = st.startH - dy;
+      } else if (st.handle === "sw") {
+        newX = st.startX + dx;
+        newW = st.startW - dx;
+        newH = st.startH + dy;
+      }
+
+      // Snap on edits.
+      if (snapToGrid) {
+        newX = snap(newX);
+        newY = snap(newY);
+        newW = snap(newW);
+        newH = snap(newH);
+      }
+
+      newW = Math.max(minSize, newW);
+      newH = Math.max(minSize, newH);
+
+      // Correct the moving edges when clamped.
+      if (st.handle === "nw" || st.handle === "sw") {
+        newX = st.startX + st.startW - newW;
+      }
+      if (st.handle === "nw" || st.handle === "ne") {
+        newY = st.startY + st.startH - newH;
+      }
+
+      setTemplate(prev => ({
+        ...prev,
+        elements: prev.elements.map(el => {
+          if (el.id !== st.elementId) return el;
+          return {
+            ...el,
+            position: { x: newX, y: newY },
+            style: {
+              ...el.style,
+              width: newW,
+              height: newH,
+            },
+          };
+        }),
+      }));
+
+      setSelectedElement(prev =>
+        prev
+          ? {
+              ...prev,
+              position: { x: newX, y: newY },
+              style: { ...prev.style, width: newW, height: newH },
+            }
+          : null
+      );
+    };
+
+    const onUp = () => {
+      resizeStateRef.current = null;
+      setIsResizing(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
   };
 
   // Update element style
@@ -252,13 +386,13 @@ export default function TemplateBuilder() {
             style={{
               left: `${element.position.x}px`,
               top: `${element.position.y}px`,
-              width: `${element.style.width}px`,
-              height: `${element.style.height}px`,
-              fontSize: `${element.style.fontSize}px`,
+              width: `${element.style.width ?? 300}px`,
+              height: `${element.style.height ?? 50}px`,
+              fontSize: `${element.style.fontSize ?? 32}px`,
               fontFamily: element.style.fontFamily,
-              color: element.style.color,
-              fontWeight: element.style.fontWeight,
-              textAlign: element.style.textAlign,
+              color: element.style.color ?? '#000000',
+              fontWeight: element.style.fontWeight ?? 'bold',
+              textAlign: element.style.textAlign ?? 'center',
               border: isSelected ? '2px solid #3b82f6' : 'none',
               padding: '4px'
             }}
@@ -277,10 +411,10 @@ export default function TemplateBuilder() {
             style={{
               left: `${element.position.x}px`,
               top: `${element.position.y}px`,
-              width: `${element.style.width}px`,
-              height: `${element.style.height}px`,
+              width: `${element.style.width ?? 200}px`,
+              height: `${element.style.height ?? 150}px`,
               border: isSelected ? '2px solid #3b82f6' : 'none',
-              borderRadius: `${element.style.borderRadius}px`,
+              borderRadius: `${element.style.borderRadius ?? 8}px`,
               overflow: 'hidden'
             }}
             onClick={(e) => handleElementClick(element, e)}
@@ -302,11 +436,11 @@ export default function TemplateBuilder() {
             style={{
               left: `${element.position.x}px`,
               top: `${element.position.y}px`,
-              width: `${element.style.width}px`,
-              height: `${element.style.height}px`,
+              width: `${element.style.width ?? 150}px`,
+              height: `${element.style.height ?? 100}px`,
               backgroundColor: element.style.backgroundColor,
-              border: `${element.style.borderWidth}px solid ${element.style.borderColor}`,
-              borderRadius: `${element.style.borderRadius}px`,
+              border: `${element.style.borderWidth ?? 2}px solid ${element.style.borderColor ?? '#cccccc'}`,
+              borderRadius: `${element.style.borderRadius ?? 8}px`,
               borderStyle: 'solid'
             }}
             onClick={(e) => handleElementClick(element, e)}
@@ -320,7 +454,7 @@ export default function TemplateBuilder() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-900 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-black text-white">
       <div className="flex h-screen">
         {/* Sidebar - Tools */}
         <div className="w-64 bg-zinc-800 p-4 border-r border-zinc-700">
@@ -335,6 +469,12 @@ export default function TemplateBuilder() {
               onChange={(e) => setTemplate(prev => ({ ...prev, name: e.target.value }))}
               className="w-full px-3 py-2 bg-zinc-700 border border-zinc-600 rounded-lg text-white"
             />
+            <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+              Tip: use placeholders in text like <code className="text-zinc-300">{'{{name}}'}</code>,{' '}
+              <code className="text-zinc-300">{'{{course}}'}</code>,{' '}
+              <code className="text-zinc-300">{'{{date}}'}</code>,{' '}
+              <code className="text-zinc-300">{'{{certificateId}}'}</code>.
+            </p>
           </div>
 
           {/* Canvas Settings */}
@@ -386,7 +526,7 @@ export default function TemplateBuilder() {
             <div className="space-y-2">
               <button
                 onClick={addTextElement}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 ease-out hover:-translate-y-[1px] shadow-sm hover:shadow-blue-500/20"
               >
                 Add Text
               </button>
@@ -405,14 +545,14 @@ export default function TemplateBuilder() {
               
               <button
                 onClick={() => addShapeElement('rectangle')}
-                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 ease-out hover:-translate-y-[1px] shadow-sm hover:shadow-purple-500/20"
               >
                 Add Rectangle
               </button>
               
               <button
                 onClick={() => addShapeElement('circle')}
-                className="w-full px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                className="w-full px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-all duration-200 ease-out hover:-translate-y-[1px] shadow-sm hover:shadow-pink-500/20"
               >
                 Add Circle
               </button>
@@ -423,7 +563,7 @@ export default function TemplateBuilder() {
           <div className="space-y-2">
             <button
               onClick={saveTemplate}
-              className="w-full px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium"
+              className="w-full px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all duration-200 ease-out hover:-translate-y-[1px] shadow-sm hover:shadow-white/20 font-medium"
             >
               Save Template
             </button>
@@ -435,25 +575,98 @@ export default function TemplateBuilder() {
           {/* Canvas */}
           <div className="flex-1 p-8 overflow-auto">
             <div className="mb-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Canvas</h2>
-              <div className="text-sm text-zinc-400">
-                {template.canvas.width} × {template.canvas.height}px
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold">Canvas</h2>
+              </div>
+              <div className="flex items-center gap-4 text-sm text-zinc-400">
+                <div>
+                  {template.canvas.width} × {template.canvas.height}px
+                </div>
+                <label className="flex items-center gap-2 text-xs select-none">
+                  <input
+                    type="checkbox"
+                    checked={snapToGrid}
+                    onChange={(e) => setSnapToGrid(e.target.checked)}
+                  />
+                  Snap
+                </label>
+                <div className="w-20">
+                  <input
+                    type="range"
+                    min={5}
+                    max={30}
+                    step={1}
+                    value={gridSize}
+                    onChange={(e) => setGridSize(Number(e.target.value))}
+                  />
+                </div>
               </div>
             </div>
             
             <div 
               ref={canvasRef}
-              className="relative bg-white mx-auto"
+              className="relative bg-white mx-auto transition-[background-color] duration-200"
               style={{
                 width: `${template.canvas.width}px`,
                 height: `${template.canvas.height}px`,
-                backgroundColor: template.canvas.backgroundColor
+                backgroundColor: template.canvas.backgroundColor,
+                backgroundImage: snapToGrid
+                  ? `repeating-linear-gradient(to right, rgba(59,130,246,0.10) 0 1px, transparent 1px ${gridSize}px),
+                     repeating-linear-gradient(to bottom, rgba(59,130,246,0.10) 0 1px, transparent 1px ${gridSize}px)`
+                  : undefined,
               }}
               onMouseMove={handleDragMove}
               onMouseUp={handleDragEnd}
               onMouseLeave={handleDragEnd}
             >
               {template.elements.map(renderElement)}
+
+              {/* Selection box + resize handles */}
+              {selectedElement && (
+                (() => {
+                  const x = selectedElement.position.x;
+                  const y = selectedElement.position.y;
+                  const w = selectedElement.style.width ?? 0;
+                  const h = selectedElement.style.height ?? 0;
+                  const size = 10;
+                  return (
+                    <>
+                      <div
+                        className="absolute pointer-events-none border border-blue-400/70 rounded-sm"
+                        style={{ left: x, top: y, width: w, height: h }}
+                      />
+                      {(["nw", "ne", "sw", "se"] as const).map((handle) => {
+                        const hx =
+                          handle === "nw" || handle === "sw" ? x : x + w;
+                        const hy =
+                          handle === "nw" || handle === "ne" ? y : y + h;
+                        return (
+                          <div
+                            key={handle}
+                            className="absolute z-50 bg-blue-500 rounded-sm cursor-nwse-resize"
+                            style={{
+                              width: size,
+                              height: size,
+                              left: hx,
+                              top: hy,
+                              transform: "translate(-50%, -50%)",
+                              // Different cursor per handle.
+                              cursor:
+                                handle === "nw"
+                                  ? "nwse-resize"
+                                  : handle === "se"
+                                    ? "nwse-resize"
+                                    : "nesw-resize",
+                            }}
+                            onMouseDown={(e) => startResize(handle, e)}
+                            title="Resize"
+                          />
+                        );
+                      })}
+                    </>
+                  );
+                })()
+              )}
             </div>
           </div>
 

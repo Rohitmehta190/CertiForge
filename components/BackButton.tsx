@@ -35,11 +35,12 @@ export default function BackButton({
 
   return (
     <button
+      type="button"
       onClick={handleBack}
-      className={`flex items-center space-x-2 text-zinc-400 hover:text-white transition-colors group ${className}`}
+      className={`flex items-center space-x-2 text-zinc-400 hover:text-white transition-all duration-200 ease-out group active:scale-[0.98] ${className}`}
     >
       <svg 
-        className="w-5 h-5 group-hover:-translate-x-1 transition-transform" 
+        className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200 ease-out" 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24"

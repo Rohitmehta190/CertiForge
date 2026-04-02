@@ -2,14 +2,15 @@
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
-import TemplateBuilder from "@/components/TemplateBuilder";
 
-export default function BuilderPage() {
+export default function DashboardGroupLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <ProtectedRoute>
-      <DashboardLayout>
-        <TemplateBuilder />
-      </DashboardLayout>
+      <DashboardLayout>{children}</DashboardLayout>
     </ProtectedRoute>
   );
 }

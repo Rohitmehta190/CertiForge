@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import CertificateTemplate from "./CertificateTemplate";
 
 interface FullscreenCertificateProps {
@@ -12,22 +13,40 @@ interface FullscreenCertificateProps {
   };
   template: string;
   showControls?: boolean;
+  /** Fill available height, dark chrome — for certificate detail page */
+  immersive?: boolean;
 }
 
-export default function FullscreenCertificate({ 
-  certificate, 
-  template, 
-  showControls = true 
+export default function FullscreenCertificate({
+  certificate,
+  template,
+  showControls = true,
+  immersive = false,
 }: FullscreenCertificateProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
 
   const certificateContent = (
-    <div className="w-full h-full bg-white flex items-center justify-center">
-      <div className="w-full h-full max-w-none">
+    <CertificateTemplate
+      recipientName={certificate.name}
+      courseName={certificate.course}
+      date={certificate.date || new Date().toLocaleDateString()}
+      certificateId={certificate.certificateId}
+      template={template}
+    />
+  );
+
+  const fullscreenContent = (
+    <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center p-4 sm:p-8">
+      <div className="w-full max-w-[min(100%,calc((100dvh-2rem)*4/3))] max-h-[calc(100dvh-2rem)]">
         <CertificateTemplate
           recipientName={certificate.name}
           courseName={certificate.course}
@@ -36,48 +55,65 @@ export default function FullscreenCertificate({
           template={template}
         />
       </div>
+
+      {/* Fullscreen Controls */}
+      {showControls && (
+        <div className="absolute top-4 right-4 z-[10000]">
+          <button
+            onClick={toggleFullscreen}
+            className="p-3 bg-black/50 hover:bg-black/70 rounded-lg text-white transition-colors"
+            title="Exit Fullscreen"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 
-  if (isFullscreen) {
+  if (isFullscreen && mounted) {
+    return createPortal(fullscreenContent, document.body);
+  }
+
+  if (immersive) {
     return (
-      <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
-        {/* Fullscreen Certificate */}
-        <div className="w-full h-full">
-          {certificateContent}
+      <div className="relative bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800/80 min-h-[calc(100dvh-11rem)] flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 min-h-[min(calc(100dvh-12rem),900px)]">
+          <div className="w-full max-w-[min(100%,calc((100dvh-11rem)*4/3))] shrink-0">
+            {certificateContent}
+          </div>
         </div>
 
-        {/* Fullscreen Controls */}
         {showControls && (
-          <div className="absolute top-4 right-4 z-60">
-            <button
-              onClick={toggleFullscreen}
-              className="p-3 bg-black/50 hover:bg-black/70 rounded-lg text-white transition-colors"
-              title="Exit Fullscreen"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={toggleFullscreen}
+            className="absolute top-3 right-3 z-20 p-2.5 bg-black/60 hover:bg-black/80 rounded-lg text-white transition-colors border border-zinc-700/50"
+            title="True full screen"
+            type="button"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+            </svg>
+          </button>
         )}
       </div>
     );
   }
 
   return (
-    <div className="relative bg-zinc-900 rounded-xl overflow-hidden">
-      {/* Certificate Container */}
-      <div className="aspect-[4/3] bg-white">
+    <div className="relative bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800/80">
+      <div className="max-w-xl mx-auto p-3 sm:p-4">
         {certificateContent}
       </div>
 
-      {/* Fullscreen Button */}
       {showControls && (
         <button
           onClick={toggleFullscreen}
-          className="absolute top-4 right-4 z-20 p-2 bg-black/50 hover:bg-black/70 rounded-lg text-white transition-colors"
+          className="absolute top-3 right-3 z-20 p-2 bg-black/60 hover:bg-black/80 rounded-lg text-white transition-colors"
           title="View Fullscreen"
+          type="button"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />

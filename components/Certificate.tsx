@@ -1,4 +1,9 @@
-export default function Certificate({ name, course }) {
+interface CertificateProps {
+  name: string;
+  course: string;
+}
+
+export default function Certificate({ name, course }: CertificateProps) {
   return (
     <div 
       id="certificate"

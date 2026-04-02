@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import DashboardLayout from "@/components/DashboardLayout";
+import Link from "next/link";
 import { db } from "@/firebase/config";
 import { collection, getDocs, query } from "firebase/firestore";
 
@@ -64,7 +63,7 @@ export default function DashboardPage() {
     icon: string; 
     loading: boolean; 
   }) => (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all duration-300 hover:shadow-lg hover:shadow-zinc-900/50">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-zinc-700 transition-all duration-200 ease-out hover:shadow-lg hover:shadow-zinc-900/50">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-zinc-400 mb-1">{title}</p>
@@ -82,9 +81,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <ProtectedRoute>
-      <DashboardLayout>
-        <div className="space-y-8">
+    <div className="space-y-8">
           {/* Header */}
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
@@ -114,8 +111,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 hover:border-zinc-700 transition-all duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 hover:border-zinc-700 transition-all duration-200 ease-out">
               <div className="flex items-center mb-4">
                 <span className="text-2xl mr-3">📤</span>
                 <h3 className="text-xl font-semibold text-white">Upload CSV</h3>
@@ -123,18 +120,39 @@ export default function DashboardPage() {
               <p className="text-zinc-400 mb-6">
                 Upload a CSV file with recipient information to generate certificates in bulk.
               </p>
-              <a
+              <Link
                 href="/upload"
-                className="inline-flex items-center px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium"
+                prefetch
+                className="inline-flex items-center px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all duration-200 ease-out font-medium active:scale-[0.98]"
               >
                 Upload Now
                 <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 hover:border-zinc-700 transition-all duration-300">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 hover:border-zinc-700 transition-all duration-200 ease-out">
+              <div className="flex items-center mb-4">
+                <span className="text-2xl mr-3">🖼️</span>
+                <h3 className="text-xl font-semibold text-white">Import design</h3>
+              </div>
+              <p className="text-zinc-400 mb-6">
+                Upload an image or PDF of a certificate and edit text on top of your original design.
+              </p>
+              <Link
+                href="/import"
+                prefetch
+                className="inline-flex items-center px-4 py-2 border border-zinc-700 text-white rounded-lg hover:bg-zinc-800 transition-all duration-200 ease-out font-medium active:scale-[0.98]"
+              >
+                Open importer
+                <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 hover:border-zinc-700 transition-all duration-200 ease-out">
               <div className="flex items-center mb-4">
                 <span className="text-2xl mr-3">📜</span>
                 <h3 className="text-xl font-semibold text-white">View Certificates</h3>
@@ -142,15 +160,16 @@ export default function DashboardPage() {
               <p className="text-zinc-400 mb-6">
                 Browse, search, and manage all your generated certificates.
               </p>
-              <a
+              <Link
                 href="/certificates"
-                className="inline-flex items-center px-4 py-2 border border-zinc-700 text-white rounded-lg hover:bg-zinc-800 transition-colors font-medium"
+                prefetch
+                className="inline-flex items-center px-4 py-2 border border-zinc-700 text-white rounded-lg hover:bg-zinc-800 transition-all duration-200 ease-out font-medium active:scale-[0.98]"
               >
                 View All
                 <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -163,8 +182,6 @@ export default function DashboardPage() {
               <p className="text-zinc-400">Start generating certificates to see activity here</p>
             </div>
           </div>
-        </div>
-      </DashboardLayout>
-    </ProtectedRoute>
+    </div>
   );
 }

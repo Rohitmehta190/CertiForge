@@ -4,10 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import MainTransition from "@/components/MainTransition";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: "📊" },
   { name: "Upload CSV", href: "/upload", icon: "📤" },
+  { name: "Import design", href: "/import", icon: "🖼️" },
   { name: "My Certificates", href: "/certificates", icon: "📜" },
   { name: "Templates", href: "/templates", icon: "🎨" },
   { name: "Template Builder", href: "/builder", icon: "🛠️" },
@@ -55,11 +57,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={item.name}
                   href={item.href}
+                  prefetch={true}
                   className={`
-                    flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors
+                    flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ease-out
                     ${isActive 
                       ? 'bg-white text-black' 
-                      : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
+                      : 'text-zinc-300 hover:bg-zinc-800 hover:text-white active:scale-[0.98]'
                     }
                   `}
                   onClick={() => setSidebarOpen(false)}
@@ -89,8 +92,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             </div>
             <button
+              type="button"
               onClick={handleLogout}
-              className="w-full px-4 py-2 text-sm font-medium text-zinc-300 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"
+              className="w-full px-4 py-2 text-sm font-medium text-zinc-300 bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-all duration-200 ease-out active:scale-[0.98]"
             >
               Sign Out
             </button>
@@ -124,7 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Page content */}
         <main className="px-4 py-6 lg:px-8">
-          {children}
+          <MainTransition>{children}</MainTransition>
         </main>
       </div>
     </div>

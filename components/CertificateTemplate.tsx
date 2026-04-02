@@ -116,8 +116,7 @@ export default function CertificateTemplate({
 
       default: // default template
         return (
-          <div className="relative w-full h-full bg-blue-50 p-8 md:p-12">
-            <div className="absolute inset-0" style={{ backgroundColor: '#ffffff' }}></div>
+          <div className="relative w-full h-full bg-white p-8 md:p-12">
             <div className="relative z-10 h-full flex flex-col justify-between">
               {/* Header */}
               <div className="text-center">
@@ -163,9 +162,9 @@ export default function CertificateTemplate({
   };
 
   return (
-    <div 
+    <div
       ref={certificateRef}
-      className="w-[800px] h-[600px] shadow-2xl"
+      className="w-full max-w-full aspect-[4/3] shadow-2xl overflow-hidden rounded-sm"
       id="certificate"
     >
       {renderTemplate()}

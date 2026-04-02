@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { FirebaseService, CertificateRecord } from "@/utils/firebaseService";
+import { downloadCertificatePdf } from "@/utils/downloadCertificatePdf";
 
 export default function VerifyPage() {
   const params = useParams();
@@ -143,16 +144,22 @@ export default function VerifyPage() {
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-4">
-                  {certificate.fileUrl && (
-                    <a
-                      href={certificate.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium text-center"
-                    >
-                      View Certificate PDF
-                    </a>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void downloadCertificatePdf(
+                        certificate.certificateId,
+                        certificate.fileUrl
+                      ).catch(() => {
+                        alert(
+                          "Could not download the PDF. If the certificate was created from your browser, sign in and open it in My Certificates, then download."
+                        );
+                      })
+                    }
+                    className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium text-center"
+                  >
+                    Download certificate PDF
+                  </button>
                   <button
                     onClick={() => window.navigator.clipboard.writeText(window.location.href)}
                     className="flex-1 px-4 py-2 border border-zinc-700 text-white rounded-lg hover:bg-zinc-800 transition-colors font-medium"
