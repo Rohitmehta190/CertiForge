@@ -12,7 +12,8 @@ export default function MainTransition({
   return (
     <div
       key={pathname}
-      className="animate-page-enter"
+      className="animate-fade-in-up"
+      style={{ animationDuration: "0.35s" }}
     >
       {children}
     </div>

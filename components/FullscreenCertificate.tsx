@@ -13,7 +13,6 @@ interface FullscreenCertificateProps {
   };
   template: string;
   showControls?: boolean;
-  /** Fill available height, dark chrome — for certificate detail page */
   immersive?: boolean;
 }
 
@@ -45,7 +44,10 @@ export default function FullscreenCertificate({
   );
 
   const fullscreenContent = (
-    <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center p-4 sm:p-8">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-8"
+      style={{ background: "var(--cf-bg-primary)", animation: "fadeIn 0.2s ease both" }}
+    >
       <div className="w-full max-w-[min(100%,calc((100dvh-2rem)*4/3))] max-h-[calc(100dvh-2rem)]">
         <CertificateTemplate
           recipientName={certificate.name}
@@ -56,15 +58,15 @@ export default function FullscreenCertificate({
         />
       </div>
 
-      {/* Fullscreen Controls */}
       {showControls && (
         <div className="absolute top-4 right-4 z-[10000]">
           <button
             onClick={toggleFullscreen}
-            className="p-3 bg-black/50 hover:bg-black/70 rounded-lg text-white transition-colors"
+            className="p-3 rounded-xl text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{ background: "rgba(15, 23, 42, 0.8)", border: "1px solid rgba(99, 102, 241, 0.15)" }}
             title="Exit Fullscreen"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -79,7 +81,7 @@ export default function FullscreenCertificate({
 
   if (immersive) {
     return (
-      <div className="relative bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800/80 min-h-[calc(100dvh-11rem)] flex flex-col">
+      <div className="relative glass-card overflow-hidden min-h-[calc(100dvh-11rem)] flex flex-col">
         <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 min-h-[min(calc(100dvh-12rem),900px)]">
           <div className="w-full max-w-[min(100%,calc((100dvh-11rem)*4/3))] shrink-0">
             {certificateContent}
@@ -89,7 +91,8 @@ export default function FullscreenCertificate({
         {showControls && (
           <button
             onClick={toggleFullscreen}
-            className="absolute top-3 right-3 z-20 p-2.5 bg-black/60 hover:bg-black/80 rounded-lg text-white transition-colors border border-zinc-700/50"
+            className="absolute top-3 right-3 z-20 p-2.5 rounded-xl text-white transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{ background: "rgba(15, 23, 42, 0.8)", border: "1px solid rgba(99, 102, 241, 0.15)" }}
             title="True full screen"
             type="button"
           >
@@ -103,7 +106,7 @@ export default function FullscreenCertificate({
   }
 
   return (
-    <div className="relative bg-zinc-950 rounded-xl overflow-hidden border border-zinc-800/80">
+    <div className="relative glass-card overflow-hidden">
       <div className="max-w-xl mx-auto p-3 sm:p-4">
         {certificateContent}
       </div>
@@ -111,7 +114,8 @@ export default function FullscreenCertificate({
       {showControls && (
         <button
           onClick={toggleFullscreen}
-          className="absolute top-3 right-3 z-20 p-2 bg-black/60 hover:bg-black/80 rounded-lg text-white transition-colors"
+          className="absolute top-3 right-3 z-20 p-2 rounded-lg text-white transition-all duration-200 hover:scale-105 active:scale-95"
+          style={{ background: "rgba(15, 23, 42, 0.8)", border: "1px solid rgba(99, 102, 241, 0.15)" }}
           title="View Fullscreen"
           type="button"
         >

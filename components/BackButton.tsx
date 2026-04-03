@@ -8,28 +8,22 @@ interface BackButtonProps {
   className?: string;
 }
 
-export default function BackButton({ 
-  to = "", 
-  label = "Back", 
-  className = "" 
+export default function BackButton({
+  to = "",
+  label = "Back",
+  className = "",
 }: BackButtonProps) {
   const router = useRouter();
 
   const handleBack = () => {
-    console.log("🔙 Back button clicked");
     try {
       if (to) {
         router.push(to);
       } else {
         router.back();
       }
-    } catch (error) {
-      console.error("❌ Navigation failed, using fallback:", error);
-      if (to) {
-        router.push(to);
-      } else {
-        router.push("/dashboard");
-      }
+    } catch {
+      router.push(to || "/dashboard");
     }
   };
 
@@ -37,19 +31,19 @@ export default function BackButton({
     <button
       type="button"
       onClick={handleBack}
-      className={`flex items-center space-x-2 text-zinc-400 hover:text-white transition-all duration-200 ease-out group active:scale-[0.98] ${className}`}
+      className={`group inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-200 transition-all duration-200 active:scale-[0.97] ${className}`}
     >
-      <svg 
-        className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200 ease-out" 
-        fill="none" 
-        stroke="currentColor" 
+      <svg
+        className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200"
+        fill="none"
+        stroke="currentColor"
         viewBox="0 0 24 24"
       >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth={2} 
-          d="M15 19l-7-7 7-7" 
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 19l-7-7 7-7"
         />
       </svg>
       <span>{label}</span>

@@ -20,61 +20,60 @@ export default function CSVUploader({ onDataParsed }: CSVUploaderProps) {
   const [error, setError] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const processFile = useCallback((file: File) => {
-    setIsProcessing(true);
-    setError("");
+  const processFile = useCallback(
+    (file: File) => {
+      setIsProcessing(true);
+      setError("");
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        try {
-          const data = results.data as Record<string, string>[];
-          
-          // Validate required fields
-          const requiredFields = ['name', 'email', 'course'];
-          const headers = Object.keys(data[0] || {});
-          
-          const missingFields = requiredFields.filter(field => !headers.includes(field));
-          if (missingFields.length > 0) {
-            throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          try {
+            const data = results.data as Record<string, string>[];
+            const requiredFields = ["name", "email", "course"];
+            const headers = Object.keys(data[0] || {});
+
+            const missingFields = requiredFields.filter((field) => !headers.includes(field));
+            if (missingFields.length > 0) {
+              throw new Error(`Missing required fields: ${missingFields.join(", ")}`);
+            }
+
+            const cleanedData: CSVData[] = data
+              .filter((row) => row.name && row.email && row.course)
+              .map((row) => ({
+                name: row.name?.trim() || "",
+                email: row.email?.trim().toLowerCase() || "",
+                course: row.course?.trim() || "",
+                date: row.date?.trim() || new Date().toISOString().split("T")[0],
+              }));
+
+            if (cleanedData.length === 0) {
+              throw new Error("No valid data found in CSV file");
+            }
+
+            const emails = cleanedData.map((item) => item.email);
+            const uniqueEmails = new Set(emails);
+            if (emails.length !== uniqueEmails.size) {
+              throw new Error("Duplicate email addresses found in CSV file");
+            }
+
+            onDataParsed(cleanedData);
+            setFile(file);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to process CSV file");
+          } finally {
+            setIsProcessing(false);
           }
-
-          // Validate and clean data
-          const cleanedData: CSVData[] = data
-            .filter(row => row.name && row.email && row.course)
-            .map(row => ({
-              name: row.name?.trim() || "",
-              email: row.email?.trim().toLowerCase() || "",
-              course: row.course?.trim() || "",
-              date: row.date?.trim() || new Date().toISOString().split('T')[0]
-            }));
-
-          if (cleanedData.length === 0) {
-            throw new Error("No valid data found in CSV file");
-          }
-
-          // Check for duplicate emails
-          const emails = cleanedData.map(item => item.email);
-          const uniqueEmails = new Set(emails);
-          if (emails.length !== uniqueEmails.size) {
-            throw new Error("Duplicate email addresses found in CSV file");
-          }
-
-          onDataParsed(cleanedData);
-          setFile(file);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to process CSV file");
-        } finally {
+        },
+        error: (error) => {
+          setError(`CSV parsing error: ${error.message}`);
           setIsProcessing(false);
-        }
-      },
-      error: (error) => {
-        setError(`CSV parsing error: ${error.message}`);
-        setIsProcessing(false);
-      }
-    });
-  }, [onDataParsed]);
+        },
+      });
+    },
+    [onDataParsed]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -86,32 +85,38 @@ export default function CSVUploader({ onDataParsed }: CSVUploaderProps) {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
 
-    const files = Array.from(e.dataTransfer.files);
-    const csvFile = files.find(file => file.type === 'text/csv' || file.name.endsWith('.csv'));
-    
-    if (!csvFile) {
-      setError("Please upload a CSV file");
-      return;
-    }
+      const files = Array.from(e.dataTransfer.files);
+      const csvFile = files.find((file) => file.type === "text/csv" || file.name.endsWith(".csv"));
 
-    processFile(csvFile);
-  }, [processFile]);
+      if (!csvFile) {
+        setError("Please upload a CSV file");
+        return;
+      }
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+      processFile(csvFile);
+    },
+    [processFile]
+  );
 
-    if (!selectedFile.type.includes('csv') && !selectedFile.name.endsWith('.csv')) {
-      setError("Please upload a CSV file");
-      return;
-    }
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = e.target.files?.[0];
+      if (!selectedFile) return;
 
-    processFile(selectedFile);
-  }, [processFile]);
+      if (!selectedFile.type.includes("csv") && !selectedFile.name.endsWith(".csv")) {
+        setError("Please upload a CSV file");
+        return;
+      }
+
+      processFile(selectedFile);
+    },
+    [processFile]
+  );
 
   const handleRemoveFile = () => {
     setFile(null);
@@ -120,15 +125,13 @@ export default function CSVUploader({ onDataParsed }: CSVUploaderProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div
-        className={`
-          relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300
-          ${isDragging 
-            ? 'border-white bg-zinc-800' 
-            : 'border-zinc-700 bg-zinc-900 hover:border-zinc-600'
-          }
-        `}
+        className="relative rounded-xl p-8 text-center transition-all duration-300 cursor-pointer"
+        style={{
+          background: isDragging ? "rgba(99, 102, 241, 0.06)" : "rgba(15, 23, 42, 0.4)",
+          border: `2px dashed ${isDragging ? "rgba(99, 102, 241, 0.5)" : "rgba(99, 102, 241, 0.12)"}`,
+        }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -137,22 +140,39 @@ export default function CSVUploader({ onDataParsed }: CSVUploaderProps) {
           type="file"
           accept=".csv"
           onChange={handleFileSelect}
-          className="absolute inset-0 w-full h-full cursor-pointer"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={isProcessing}
         />
-        
-        <div className="space-y-4">
-          <div className="mx-auto w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+
+        <div className="space-y-3">
+          <div
+            className="mx-auto w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300"
+            style={{
+              background: isDragging
+                ? "linear-gradient(135deg, var(--cf-accent-1), var(--cf-accent-2))"
+                : "rgba(99, 102, 241, 0.08)",
+            }}
+          >
+            <svg
+              className={`w-6 h-6 transition-colors duration-300 ${isDragging ? "text-white" : "text-indigo-400"}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              />
             </svg>
           </div>
-          
+
           <div>
-            <p className="text-white font-medium">
+            <p className="text-sm font-medium text-slate-300">
               {isProcessing ? "Processing..." : "Drop your CSV file here, or click to browse"}
             </p>
-            <p className="text-zinc-400 text-sm mt-1">
+            <p className="text-xs text-slate-600 mt-1">
               CSV files with columns: name, email, course (date is optional)
             </p>
           </div>
@@ -160,30 +180,47 @@ export default function CSVUploader({ onDataParsed }: CSVUploaderProps) {
       </div>
 
       {error && (
-        <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-lg">
-          <p className="text-sm">{error}</p>
+        <div
+          className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm animate-fade-in"
+          style={{
+            background: "rgba(239, 68, 68, 0.06)",
+            border: "1px solid rgba(239, 68, 68, 0.15)",
+          }}
+        >
+          <svg className="w-4 h-4 text-red-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-red-400">{error}</p>
         </div>
       )}
 
       {file && !error && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+        <div className="glass-card p-4 animate-fade-in">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: "rgba(16, 185, 129, 0.1)" }}
+              >
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
               <div>
-                <p className="text-white font-medium">{file.name}</p>
-                <p className="text-zinc-400 text-sm">{(file.size / 1024).toFixed(1)} KB</p>
+                <p className="text-sm font-medium text-white">{file.name}</p>
+                <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
               </div>
             </div>
             <button
               onClick={handleRemoveFile}
-              className="text-zinc-400 hover:text-white transition-colors"
+              className="text-slate-500 hover:text-slate-300 transition-colors p-1"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>

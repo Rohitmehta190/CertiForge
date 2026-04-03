@@ -17,8 +17,21 @@ export default function HomePage() {
   }, [user, router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+    <div className="flex items-center justify-center min-h-screen" style={{ background: "var(--cf-bg-primary)" }}>
+      <div className="flex flex-col items-center gap-4 animate-fade-in">
+        <div className="relative w-12 h-12">
+          <div className="absolute inset-0 rounded-full" style={{ border: "2px solid rgba(99, 102, 241, 0.1)" }} />
+          <div
+            className="absolute inset-0 rounded-full"
+            style={{
+              border: "2px solid transparent",
+              borderTopColor: "var(--cf-accent-1)",
+              borderRightColor: "var(--cf-accent-2)",
+              animation: "spin-slow 0.8s linear infinite",
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }
