@@ -40,6 +40,45 @@ export interface TemplateRecord {
   updatedAt: Timestamp;
 }
 
+export interface Sponsor {
+  id: string;
+  name: string;
+  logoUrl?: string;
+  tier: 'Platinum' | 'Gold' | 'Silver' | 'Partner';
+}
+
+export interface EventRecord {
+  id: string;
+  userId: string;
+  title: string;
+  date: string;
+  time: string;
+  venue: string;
+  description: string;
+  bannerUrl?: string;
+  sponsors: Sponsor[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface TicketData {
+  eventId: string;
+  attendeeName: string;
+  attendeeEmail: string;
+  ticketType: string;
+  ticketId: string; // Unique string for QR
+  status: 'pending' | 'checked-in';
+  scannedAt?: Timestamp;
+}
+
+export interface TicketRecord extends TicketData {
+  id: string;
+  userId: string;
+  fileUrl?: string; // S3/Firebase Storage URL of the ticket PDF
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 export class FirebaseService {
   // Certificate operations
   static async saveCertificate(
@@ -410,6 +449,129 @@ export class FirebaseService {
       );
     } catch (error) {
       console.error("Error searching certificates:", error);
+      throw error;
+    }
+  }
+
+  // ============================================
+  // Events Operations
+  // ============================================
+  static async createEvent(eventData: Omit<EventRecord, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+
+      const eventRecord = {
+        ...eventData,
+        userId: user.uid,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      };
+
+      const docRef = await addDoc(collection(db, "events"), eventRecord);
+      return docRef.id;
+    } catch (error) {
+      console.error("Error creating event:", error);
+      throw error;
+    }
+  }
+
+  static async getEvents(userId?: string): Promise<EventRecord[]> {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+
+      const eventsQuery = query(
+        collection(db, "events"),
+        where("userId", "==", userId || user.uid)
+      );
+
+      const querySnapshot = await getDocs(eventsQuery);
+      const events = querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      })) as EventRecord[];
+
+      // Sort by date approaching
+      events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      return events;
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      throw error;
+    }
+  }
+
+  static async getEventById(eventId: string): Promise<EventRecord | null> {
+    try {
+      const docRef = doc(db, "events", eventId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as EventRecord;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching event:", error);
+      return null;
+    }
+  }
+
+  // ============================================
+  // Ticket Operations
+  // ============================================
+  static async saveTicket(ticketData: TicketData, pdfBlob: Blob): Promise<string> {
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+
+      // For local dev, fallback. In real production, upload to Firebase Storage and get URL.
+      const isDevelopment = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+      
+      const ticketRecord = {
+        ...ticketData,
+        userId: user.uid,
+        fileUrl: "",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      };
+
+      const ticketsCollection = collection(db, "events", ticketData.eventId, "tickets");
+      const docRef = await addDoc(ticketsCollection, ticketRecord);
+
+      if (isDevelopment) {
+         const reader = new FileReader();
+         const base64 = await new Promise<string>((resolve, reject) => {
+           reader.onload = () => resolve(reader.result as string);
+           reader.onerror = reject;
+           reader.readAsDataURL(pdfBlob);
+         });
+         localStorage.setItem(`ticket_${ticketData.ticketId}`, base64);
+      } else {
+        // Upload would happen here the same as certificates
+        const storageRef = ref(storage, `tickets/${user.uid}/${ticketData.ticketId}.pdf`);
+        await uploadBytes(storageRef, pdfBlob, { contentType: 'application/pdf' });
+        const fileUrl = await getDownloadURL(storageRef);
+        // update the doc
+        // await updateDoc(docRef, { fileUrl });
+      }
+
+      return docRef.id;
+    } catch (error) {
+      console.error("Error saving ticket:", error);
+      throw error;
+    }
+  }
+
+  static async getEventTickets(eventId: string): Promise<TicketRecord[]> {
+    try {
+      const ticketsCollection = collection(db, "events", eventId, "tickets");
+      const querySnapshot = await getDocs(query(ticketsCollection));
+      return querySnapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      })) as TicketRecord[];
+    } catch (error) {
+      console.error("Error fetching event tickets:", error);
       throw error;
     }
   }

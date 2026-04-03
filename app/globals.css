@@ -70,6 +70,8 @@
   --color-background: var(--cf-bg-primary);
   --color-foreground: var(--cf-text-primary);
   --font-sans: var(--font-inter);
+  --font-outfit: var(--font-outfit);
+  --font-serif: var(--font-playfair);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -241,6 +243,22 @@ body::before {
 .gradient-btn > * {
   position: relative;
   z-index: 1;
+}
+
+.bg-mesh-vibrant {
+  background-color: var(--cf-bg-primary);
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+}
+
+.font-outfit {
+  font-family: var(--font-outfit), var(--font-inter), sans-serif;
+}
+
+.font-serif {
+  font-family: var(--font-playfair), serif;
 }
 
 /* ═══════════════════════════════════════════════
