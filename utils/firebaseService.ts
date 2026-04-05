@@ -9,7 +9,8 @@ import {
   query, 
   where, 
   orderBy,
-  Timestamp 
+  Timestamp,
+  collectionGroup
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -573,6 +574,24 @@ export class FirebaseService {
     } catch (error) {
       console.error("Error fetching event tickets:", error);
       throw error;
+    }
+  }
+
+  static async getTicketById(ticketId: string): Promise<TicketRecord | null> {
+    try {
+      const ticketsQuery = query(collectionGroup(db, "tickets"), where("ticketId", "==", ticketId));
+      const querySnapshot = await getDocs(ticketsQuery);
+      if (!querySnapshot.empty) {
+        const d = querySnapshot.docs[0];
+        return {
+          id: d.id,
+          ...d.data()
+        } as TicketRecord;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching ticket by ID:", error);
+      return null;
     }
   }
 }

@@ -3,6 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function LoginPage() {
   const { user, loginWithGoogle, loading } = useAuth();
@@ -143,7 +144,7 @@ export default function LoginPage() {
         </div>
 
         {/* Feature highlights */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-3 mb-6">
           {[
             { icon: "⚡", label: "Bulk Generation" },
             { icon: "🔒", label: "Verified & Secure" },
@@ -161,6 +162,10 @@ export default function LoginPage() {
               <span className="text-[11px] text-slate-500 font-medium">{feature.label}</span>
             </div>
           ))}
+        </div>
+
+        <div className="text-center text-sm text-slate-400">
+           Don't have an account? <Link href="/register" className="text-indigo-400 font-medium hover:text-indigo-300">Sign up for free</Link>
         </div>
       </div>
     </div>

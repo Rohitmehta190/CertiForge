@@ -10,6 +10,7 @@ interface Stats {
   totalCertificates: number;
   activeTemplates: number;
   totalRecipients: number;
+  totalEvents: number;
 }
 
 function useCountUp(target: number, duration = 1200) {
@@ -42,6 +43,7 @@ export default function DashboardPage() {
     totalCertificates: 0,
     activeTemplates: 0,
     totalRecipients: 0,
+    totalEvents: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -66,10 +68,15 @@ export default function DashboardPage() {
           if (data.email) recipientsSet.add(data.email);
         });
 
+        const eventsQuery = query(collection(db, "events"), where("userId", "==", user.uid));
+        const eventsSnapshot = await getDocs(eventsQuery);
+        const totalEvents = eventsSnapshot.size;
+
         setStats({
           totalCertificates,
           activeTemplates,
           totalRecipients: recipientsSet.size,
+          totalEvents,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -91,6 +98,7 @@ export default function DashboardPage() {
   const certCount = useCountUp(loading ? 0 : stats.totalCertificates);
   const templateCount = useCountUp(loading ? 0 : stats.activeTemplates);
   const recipientCount = useCountUp(loading ? 0 : stats.totalRecipients);
+  const eventCount = useCountUp(loading ? 0 : stats.totalEvents);
 
   const statCards = [
     {
@@ -123,6 +131,17 @@ export default function DashboardPage() {
       icon: (
         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+    },
+    {
+      title: "Total Events",
+      value: eventCount,
+      gradient: "linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(244, 114, 182, 0.08))",
+      iconBg: "linear-gradient(135deg, #ec4899, #f472b6)",
+      icon: (
+        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
     },
@@ -189,7 +208,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card, i) => (
           <div
             key={card.title}

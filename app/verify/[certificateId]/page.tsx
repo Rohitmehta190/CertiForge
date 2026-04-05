@@ -2,42 +2,55 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { FirebaseService, CertificateRecord } from "@/utils/firebaseService";
+import { FirebaseService, CertificateRecord, TicketRecord, EventRecord } from "@/utils/firebaseService";
 import { downloadCertificatePdf } from "@/utils/downloadCertificatePdf";
 
 export default function VerifyPage() {
   const params = useParams();
   const certificateId = params.certificateId as string;
 
-  const [certificate, setCertificate] = useState<CertificateRecord | null>(null);
+  const [record, setRecord] = useState<{type: 'certificate', data: CertificateRecord} | {type: 'ticket', data: TicketRecord, event: EventRecord | null} | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [isValid, setIsValid] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const verifyCertificate = async () => {
+    const verifyDocument = async () => {
       try {
         setLoading(true);
         setError("");
-        const result = await FirebaseService.getCertificateById(certificateId);
-        if (result) {
-          setCertificate(result);
+        
+        // 1. Check if it's a certificate
+        const certResult = await FirebaseService.getCertificateById(certificateId);
+        if (certResult) {
+          setRecord({ type: 'certificate', data: certResult });
           setIsValid(true);
-        } else {
-          setIsValid(false);
-          setError("Certificate not found");
+          return;
         }
+
+        // 2. Check if it's a ticket
+        const ticketResult = await FirebaseService.getTicketById(certificateId);
+        if (ticketResult) {
+          const eventRecord = await FirebaseService.getEventById(ticketResult.eventId);
+          setRecord({ type: 'ticket', data: ticketResult, event: eventRecord });
+          setIsValid(true);
+          return;
+        }
+        
+        // Neither found
+        setIsValid(false);
+        setError("Document not found");
       } catch (err) {
         setIsValid(false);
-        setError("Error verifying certificate");
+        setError("Error verifying document");
         console.error("Verification error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (certificateId) verifyCertificate();
+    if (certificateId) verifyDocument();
   }, [certificateId]);
 
   const formatDate = (timestamp: { toDate?: () => Date }) => {
@@ -72,7 +85,7 @@ export default function VerifyPage() {
               }}
             />
           </div>
-          <p className="text-sm text-slate-500">Verifying certificate...</p>
+          <p className="text-sm text-slate-500">Verifying document natively...</p>
         </div>
       </div>
     );
@@ -104,13 +117,13 @@ export default function VerifyPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-1">Certificate Verification</h1>
-            <p className="text-sm text-slate-500">Verify the authenticity of a certificate</p>
+            <h1 className="text-2xl font-bold text-white mb-1">Global Verification Record</h1>
+            <p className="text-sm text-slate-500">Verify the authenticity of any certiforge document</p>
           </div>
 
           {/* Result */}
           <div className="glass-card p-6 animate-fade-in-up stagger-1">
-            {isValid === true && certificate ? (
+            {isValid === true && record ? (
               <div className="space-y-6">
                 {/* Success Icon */}
                 <div className="text-center">
@@ -122,27 +135,32 @@ export default function VerifyPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-bold text-emerald-400 mb-1">Valid Certificate</h2>
-                  <p className="text-xs text-slate-500">This certificate has been verified and is authentic</p>
+                  <h2 className="text-xl font-bold text-emerald-400 mb-1">Authentic Record Found</h2>
+                  <p className="text-xs text-slate-500">This document is verified and authenticated by our system</p>
                 </div>
 
-                {/* Certificate Details */}
+                {/* Document Details */}
                 <div className="p-4 rounded-xl space-y-3" style={{ background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(99, 102, 241, 0.06)" }}>
-                  <h3 className="text-sm font-semibold text-white mb-3">Certificate Details</h3>
+                  <h3 className="text-sm font-semibold text-white mb-3">
+                    {record.type === 'certificate' ? 'Certificate' : 'Event Ticket'} Details
+                  </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {[
-                      { label: "Recipient Name", value: certificate.name },
-                      { label: "Email Address", value: certificate.email },
-                      { label: "Course/Program", value: certificate.course },
-                      { label: "Completion Date", value: certificate.date || formatDate(certificate.createdAt) },
-                      { label: "Certificate ID", value: certificate.certificateId, mono: true },
-                      { label: "Issue Date", value: formatDate(certificate.createdAt) },
-                    ].map((item) => (
-                      <div key={item.label}>
-                        <p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">{item.label}</p>
-                        <p className={`text-sm text-white ${item.mono ? "font-mono text-xs" : ""}`}>{item.value}</p>
-                      </div>
-                    ))}
+                    {record.type === 'certificate' ? (
+                      <>
+                        <div key="Recipient Name"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Recipient Name</p><p className="text-sm text-white ">{record.data.name}</p></div>
+                        <div key="Course/Program"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Course/Program</p><p className="text-sm text-white ">{record.data.course}</p></div>
+                        <div key="Completion Date"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Completion Date</p><p className="text-sm text-white ">{record.data.date || formatDate(record.data.createdAt)}</p></div>
+                        <div key="Certificate ID"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Certificate ID</p><p className="text-sm text-white font-mono text-xs">{record.data.certificateId}</p></div>
+                      </>
+                    ) : (
+                      <>
+                        <div key="Attendee Name"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Attendee Name</p><p className="text-sm text-white ">{record.data.attendeeName}</p></div>
+                        <div key="Event"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Event Name</p><p className="text-sm text-white ">{record.event?.title || "Unknown Event"}</p></div>
+                        <div key="Ticket Type"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Ticket Type</p><p className="text-sm text-white ">{record.data.ticketType}</p></div>
+                        <div key="Ticket ID"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Ticket ID</p><p className="text-sm text-white font-mono text-xs">{record.data.ticketId}</p></div>
+                        <div key="Status"><p className="text-[10px] text-slate-600 mb-0.5 uppercase tracking-wider">Check-in Status</p><p className="text-sm text-white ">{record.data.status === 'checked-in' ? '✅ Checked In' : 'Pending'}</p></div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -152,28 +170,28 @@ export default function VerifyPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    This certificate was issued by CertiForge and can be verified at any time using the unique certificate ID.
+                    This document was officially issued by CertiForge. Its blockchain-analog ID provides cryptographic verification of its authenticity.
                   </p>
                 </div>
 
                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void downloadCertificatePdf(certificate.certificateId, certificate.fileUrl).catch(() => {
-                        /* silent */
-                      })
-                    }
-                    className="flex-1 gradient-btn px-4 py-2.5 rounded-xl text-sm font-medium active:scale-[0.98]"
-                  >
-                    <span className="relative z-10 flex items-center justify-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Download PDF
-                    </span>
-                  </button>
+                  {record.type === 'certificate' && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void downloadCertificatePdf(record.data.certificateId, record.data.fileUrl).catch(() => {})
+                      }
+                      className="flex-1 gradient-btn px-4 py-2.5 rounded-xl text-sm font-medium active:scale-[0.98]"
+                    >
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Download PDF
+                      </span>
+                    </button>
+                  )}
                   <button
                     onClick={handleCopy}
                     className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-300 border border-white/[0.08] hover:bg-white/[0.03] transition-all active:scale-[0.98]"
@@ -190,7 +208,7 @@ export default function VerifyPage() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                         </svg>
-                        Copy Link
+                        Copy Shareable Link
                       </span>
                     )}
                   </button>
@@ -209,12 +227,12 @@ export default function VerifyPage() {
                 </div>
 
                 <div>
-                  <h2 className="text-xl font-bold text-red-400 mb-1">Invalid Certificate</h2>
+                  <h2 className="text-xl font-bold text-red-400 mb-1">Invalid Document</h2>
                   <p className="text-sm text-slate-500 mb-2">
-                    {error || "The certificate ID does not exist in our system."}
+                    {error || "The ID you provided does not exist in our systems."}
                   </p>
                   <p className="text-xs text-slate-600">
-                    Certificate ID: <span className="font-mono text-slate-400">{certificateId}</span>
+                    Supplied ID: <span className="font-mono text-slate-400">{certificateId}</span>
                   </p>
                 </div>
 
@@ -223,7 +241,7 @@ export default function VerifyPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    Double-check the certificate ID and try again. IDs are case-sensitive.
+                    Double-check the certificate or ticket ID. It is case-sensitive.
                   </p>
                 </div>
 
@@ -240,7 +258,7 @@ export default function VerifyPage() {
           {/* Footer */}
           <div className="text-center mt-8 animate-fade-in-up stagger-3">
             <p className="text-xs text-slate-600">
-              Powered by <span className="gradient-text font-semibold">CertiForge</span>
+              Powered by <span className="gradient-text font-semibold">CertiForge Pro Event Suite</span>
             </p>
           </div>
         </div>
