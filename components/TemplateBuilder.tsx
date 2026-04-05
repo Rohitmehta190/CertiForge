@@ -8,7 +8,7 @@ import {
   Type, Image as ImageIcon, Square, Circle, Save, Pointer,
   Move, Minimize2, BringToFront, SendToBack, Copy, Trash2,
   ZoomIn, ZoomOut, Check, AlignLeft, AlignCenter, AlignRight,
-  MousePointer2, Upload
+  MousePointer2, Upload, Wand2
 } from "lucide-react";
 
 interface Position { x: number; y: number }
@@ -258,7 +258,7 @@ export default function TemplateBuilder() {
     <div className="h-[calc(100vh-6rem)] w-full flex flex-col bg-[#06080f] rounded-2xl border border-white/10 overflow-hidden font-sans">
       
       {/* Top Toolbar */}
-      <div className="h-14 bg-white/5 border-b border-white/10 flex items-center justify-between px-4">
+      <div className="h-16 bg-[#0c1120]/80 backdrop-blur-xl border-b border-indigo-500/20 flex items-center justify-between px-6 shadow-xl relative z-10">
         <div className="flex items-center gap-4">
           <input 
             type="text" 
@@ -273,19 +273,38 @@ export default function TemplateBuilder() {
               <ImageIcon size={18} />
               <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
             </label>
-            <button onClick={() => addElement('shape', 'rectangle', { width: 200, height: 200 }, { backgroundColor: '#e2e8f0', borderColor: '#94a3b8', borderWidth: 0, borderRadius: 0 })} className="p-2 hover:bg-white/10 rounded text-slate-300 hover:text-white" title="Add Rectangle"><Square size={18} /></button>
-            <button onClick={() => addElement('shape', 'circle', { width: 200, height: 200 }, { backgroundColor: '#e2e8f0', borderColor: '#94a3b8', borderWidth: 0, borderRadius: 100 })} className="p-2 hover:bg-white/10 rounded text-slate-300 hover:text-white" title="Add Circle"><Circle size={18} /></button>
+            <button onClick={() => addElement('shape', 'rectangle', { width: 200, height: 200 }, { backgroundColor: '#e2e8f0', borderColor: '#94a3b8', borderWidth: 0, borderRadius: 0 })} className="p-2 hover:bg-zinc-800 rounded text-slate-300 hover:text-white transition-colors" title="Add Rectangle"><Square size={18} /></button>
+            <button onClick={() => addElement('shape', 'circle', { width: 200, height: 200 }, { backgroundColor: '#e2e8f0', borderColor: '#94a3b8', borderWidth: 0, borderRadius: 100 })} className="p-2 hover:bg-zinc-800 rounded text-slate-300 hover:text-white transition-colors" title="Add Circle"><Circle size={18} /></button>
+            <div className="w-px h-5 bg-white/10 mx-1" />
+            <button 
+              onClick={() => {
+                showToast("Magic Format Applied! ✨", "success");
+                setTemplate(prev => ({
+                  ...prev,
+                  elements: prev.elements.map(el => {
+                    if (el.type === 'text') {
+                      return { ...el, style: { ...el.style, fontFamily: 'Outfit, sans-serif', color: '#1e1b4b', textAlign: 'center' } };
+                    }
+                    return el;
+                  })
+                }));
+              }} 
+              className="p-2 text-pink-400 hover:bg-pink-500/20 hover:text-pink-300 rounded transition-colors" 
+              title="Magic Auto-Format Typography"
+            >
+              <Wand2 size={18} />
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-black/20 rounded-lg p-1">
-            <button onClick={() => setZoom(z => Math.max(0.1, z - 0.1))} className="p-1.5 hover:bg-white/10 rounded text-slate-300"><ZoomOut size={16} /></button>
-            <span className="text-xs font-mono w-10 text-center">{Math.round(zoom * 100)}%</span>
-            <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1.5 hover:bg-white/10 rounded text-slate-300"><ZoomIn size={16} /></button>
+        <div className="flex items-center gap-5">
+          <div className="flex items-center gap-2 bg-black/30 rounded-xl p-1 border border-white/5 shadow-inner">
+            <button onClick={() => setZoom(z => Math.max(0.1, z - 0.1))} className="p-1.5 hover:bg-white/10 rounded-lg text-slate-300 transition-colors"><ZoomOut size={16} /></button>
+            <span className="text-xs font-mono w-10 text-center text-slate-300">{Math.round(zoom * 100)}%</span>
+            <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1.5 hover:bg-white/10 rounded-lg text-slate-300 transition-colors"><ZoomIn size={16} /></button>
           </div>
-          <button onClick={saveToDatabase} className="gradient-btn px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
-            <Save className="w-4 h-4 z-10" /> <span className="z-10">Save to Cloud</span>
+          <button onClick={saveToDatabase} className="gradient-btn px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform">
+            <Save className="w-4 h-4 z-10" /> <span className="z-10">Publish Template</span>
           </button>
         </div>
       </div>
@@ -293,29 +312,29 @@ export default function TemplateBuilder() {
       <div className="flex flex-1 overflow-hidden">
         
         {/* Left Sidebar - Layers & Settings */}
-        <div className="w-64 bg-white/5 border-r border-white/10 flex flex-col">
-          <div className="p-4 border-b border-white/10">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Canvas</h3>
-            <div className="space-y-3">
+        <div className="w-72 bg-[#080b14] border-r border-indigo-500/10 flex flex-col z-10 shadow-xl shadow-black/50">
+          <div className="p-5 border-b border-white/5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Canvas Configuration</h3>
+            <div className="space-y-4">
                <div>
-                  <label className="text-xs text-slate-500 mb-1 flex justify-between">Dimensions<span>W × H</span></label>
+                  <label className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest flex items-center justify-between">Dimensions <span className="text-slate-600">W × H</span></label>
                   <div className="flex gap-2">
-                    <input type="number" value={template.canvas.width} onChange={e => setTemplate({...template, canvas: {...template.canvas, width: +e.target.value}})} className="w-full bg-black/30 border border-white/10 rounded px-2 py-1.5 text-xs text-white" />
-                    <input type="number" value={template.canvas.height} onChange={e => setTemplate({...template, canvas: {...template.canvas, height: +e.target.value}})} className="w-full bg-black/30 border border-white/10 rounded px-2 py-1.5 text-xs text-white" />
+                    <input type="number" value={template.canvas.width} onChange={e => setTemplate({...template, canvas: {...template.canvas, width: +e.target.value}})} className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono text-indigo-100 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+                    <input type="number" value={template.canvas.height} onChange={e => setTemplate({...template, canvas: {...template.canvas, height: +e.target.value}})} className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono text-indigo-100 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
                   </div>
                </div>
                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">Background Color</label>
-                  <div className="flex gap-2">
-                    <input type="color" value={template.canvas.backgroundColor} onChange={e => setTemplate({...template, canvas: {...template.canvas, backgroundColor: e.target.value}})} className="w-8 h-8 rounded shrink-0 p-0 border-0" />
-                    <input type="text" value={template.canvas.backgroundColor} readOnly className="w-full bg-black/30 border border-white/10 rounded px-2 text-xs text-mono text-white" />
+                  <label className="text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-widest block">Background Base</label>
+                  <div className="flex gap-2 items-center bg-black/40 p-1.5 rounded-xl border border-white/10">
+                    <input type="color" value={template.canvas.backgroundColor} onChange={e => setTemplate({...template, canvas: {...template.canvas, backgroundColor: e.target.value}})} className="w-8 h-8 rounded-lg shrink-0 p-0 border-0 cursor-pointer shadow-inner shadow-black/50" />
+                    <input type="text" value={template.canvas.backgroundColor} readOnly className="w-full bg-transparent px-2 text-xs font-mono text-slate-300 outline-none cursor-default uppercase" />
                   </div>
                </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Layers</h3>
+          <div className="flex-1 overflow-y-auto p-5">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Layer Stack</h3>
             <div className="space-y-1 flex flex-col-reverse">
               {template.elements.map((el, i) => (
                 <button 
@@ -419,97 +438,98 @@ export default function TemplateBuilder() {
         </div>
 
         {/* Right Sidebar - Properties */}
-        <div className="w-80 bg-white/5 border-l border-white/10 flex flex-col overflow-y-auto">
+        <div className="w-80 bg-[#080b14] border-l border-indigo-500/10 flex flex-col overflow-y-auto z-10 shadow-xl shadow-black/50 mt-16 md:mt-0">
           {selectedElement ? (
-            <div className="p-5 space-y-6">
+            <div className="p-6 space-y-8">
               
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white capitalize">{selectedElement.type} Properties</h3>
-                <div className="flex gap-1">
-                  <button onClick={bringForward} className="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white" title="Bring Forward"><BringToFront size={16} /></button>
-                  <button onClick={sendBackward} className="p-1.5 hover:bg-white/10 rounded text-slate-400 hover:text-white" title="Send Backward"><SendToBack size={16} /></button>
-                  <button onClick={deleteElement} className="p-1.5 hover:bg-red-500/20 rounded text-red-400 hover:text-red-300 ml-2" title="Delete"><Trash2 size={16} /></button>
+              <div className="flex items-center justify-between pb-4 border-b border-white/5">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">{selectedElement.type} Node</h3>
+                <div className="flex gap-1 bg-black/30 p-1 rounded-xl border border-white/5">
+                  <button onClick={bringForward} className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors" title="Bring Forward"><BringToFront size={16} /></button>
+                  <button onClick={sendBackward} className="p-1.5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors" title="Send Backward"><SendToBack size={16} /></button>
+                  <div className="w-px h-4 bg-white/10 mx-0.5 my-auto" />
+                  <button onClick={deleteElement} className="p-1.5 hover:bg-red-500/20 rounded-lg text-red-500 hover:text-red-400 transition-colors" title="Delete"><Trash2 size={16} /></button>
                 </div>
               </div>
 
               {/* Box Model (Size & Position) */}
               <div>
-                <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Geometry</h4>
-                <div className="grid grid-cols-2 gap-3">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Geometry Bounds</h4>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-[10px] text-slate-500 mb-1 block">X Offset</label>
-                    <input type="number" value={selectedElement.position.x} onChange={e => {
+                    <label className="text-[10px] font-bold tracking-wider text-slate-500 mb-1.5 block">X Position</label>
+                    <input type="number" value={Math.round(selectedElement.position.x)} onChange={e => {
                       const newTemplate = {...template, elements: template.elements.map(el => el.id === selectedId ? {...el, position: {...el.position, x: +e.target.value}} : el)};
                       setTemplate(newTemplate);
-                    }} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white uppercase" />
+                    }} className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-indigo-500/50 transition-colors" />
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-500 mb-1 block">Y Offset</label>
-                    <input type="number" value={selectedElement.position.y} onChange={e => {
+                    <label className="text-[10px] font-bold tracking-wider text-slate-500 mb-1.5 block">Y Position</label>
+                    <input type="number" value={Math.round(selectedElement.position.y)} onChange={e => {
                       const newTemplate = {...template, elements: template.elements.map(el => el.id === selectedId ? {...el, position: {...el.position, y: +e.target.value}} : el)};
                       setTemplate(newTemplate);
-                    }} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white uppercase" />
+                    }} className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-indigo-500/50 transition-colors" />
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-500 mb-1 block">Width</label>
-                    <input type="number" value={selectedElement.size.width} onChange={e => {
+                    <label className="text-[10px] font-bold tracking-wider text-slate-500 mb-1.5 block">Width</label>
+                    <input type="number" value={Math.round(selectedElement.size.width)} onChange={e => {
                       const newTemplate = {...template, elements: template.elements.map(el => el.id === selectedId ? {...el, size: {...el.size, width: +e.target.value}} : el)};
                       setTemplate(newTemplate);
-                    }} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white uppercase" />
+                    }} className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-indigo-500/50 transition-colors" />
                   </div>
                   <div>
-                    <label className="text-[10px] text-slate-500 mb-1 block">Height</label>
-                    <input type="number" value={selectedElement.size.height} onChange={e => {
+                    <label className="text-[10px] font-bold tracking-wider text-slate-500 mb-1.5 block">Height</label>
+                    <input type="number" value={Math.round(selectedElement.size.height)} onChange={e => {
                       const newTemplate = {...template, elements: template.elements.map(el => el.id === selectedId ? {...el, size: {...el.size, height: +e.target.value}} : el)};
                       setTemplate(newTemplate);
-                    }} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white uppercase" />
+                    }} className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-indigo-500/50 transition-colors" />
                   </div>
                 </div>
               </div>
 
               {selectedElement.type === 'text' && (
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Text</h4>
-                  <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center justify-between">Text Properties</h4>
+                  <div className="space-y-4">
                     <textarea 
                       value={selectedElement.content}
                       onChange={(e) => updateContent(e.target.value)}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-sm text-white resize-y"
+                      className="w-full bg-black/40 border border-white/5 rounded-xl p-3 text-[13px] text-white resize-y outline-none focus:border-indigo-500/50 transition-colors shadow-inner"
                       rows={3}
                     />
                     
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] text-slate-500 mb-1 block">Font Selection</label>
-                        <select value={selectedElement.style.fontFamily} onChange={(e) => updateStyle('fontFamily', e.target.value)} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <label className="text-[10px] font-bold tracking-wider text-slate-500 mb-1.5 block">Font Family</label>
+                        <select value={selectedElement.style.fontFamily} onChange={(e) => updateStyle('fontFamily', e.target.value)} className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-2.5 text-xs text-slate-200 outline-none focus:border-indigo-500/50 appearance-none bg-none shadow-inner">
                           <option value="Inter, sans-serif">Inter</option>
                           <option value="Outfit, sans-serif">Outfit</option>
-                          <option value="Playfair Display, serif">Playfair Display</option>
-                          <option value="Courier New, monospace">Courier New</option>
+                          <option value="Playfair Display, serif">Playfair Display (Serif)</option>
+                          <option value="Courier New, monospace">Courier (Mono)</option>
+                          <option value="'Times New Roman', serif">Times New Roman</option>
                         </select>
                       </div>
                       <div>
-                        <label className="text-[10px] text-slate-500 mb-1 block">Font Size</label>
-                        <input type="number" value={selectedElement.style.fontSize} onChange={(e) => updateStyle('fontSize', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/10 rounded px-2 py-1.5 text-xs text-white" />
+                        <label className="text-[10px] font-bold tracking-wider text-slate-500 mb-1.5 block">Font Size</label>
+                        <input type="number" value={selectedElement.style.fontSize} onChange={(e) => updateStyle('fontSize', parseInt(e.target.value))} className="w-full bg-black/40 border border-white/5 rounded-xl px-3 py-2 text-xs font-mono text-white outline-none focus:border-indigo-500/50 transition-colors shadow-inner" />
+                      </div>
+                      <div>
+                         <label className="text-[10px] font-bold tracking-wider text-slate-500 mb-1.5 block">Text Color</label>
+                         <div className="flex gap-2 items-center bg-black/40 p-1.5 rounded-xl border border-white/5 shadow-inner">
+                           <input type="color" value={selectedElement.style.color} onChange={e => updateStyle('color', e.target.value)} className="w-7 h-7 rounded-sm shrink-0 p-0 border-0 cursor-pointer" />
+                           <input type="text" value={selectedElement.style.color} readOnly className="w-full bg-transparent px-1 text-[10px] font-mono text-slate-300 outline-none cursor-default uppercase" />
+                         </div>
                       </div>
                     </div>
 
                     <div>
-                       <label className="text-[10px] text-slate-500 mb-1 block">Color</label>
-                       <div className="flex gap-2">
-                         <input type="color" value={selectedElement.style.color} onChange={e => updateStyle('color', e.target.value)} className="w-8 h-8 rounded p-0 border-0 shadow-sm" />
-                         <input type="text" value={selectedElement.style.color} readOnly className="w-full bg-black/40 border border-white/10 rounded px-2 text-xs text-white font-mono" />
-                       </div>
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] text-slate-500 mb-1 block">Alignment</label>
-                      <div className="flex bg-black/40 rounded-lg p-1 border border-white/10">
+                      <label className="text-[10px] font-bold tracking-wider text-slate-500 mb-1.5 block">Alignment</label>
+                      <div className="flex bg-black/40 rounded-xl p-1 border border-white/5 w-max shadow-inner">
                         {(['left', 'center', 'right'] as const).map((align) => (
                           <button 
                             key={align}
                             onClick={() => updateStyle('textAlign', align)}
-                            className={`flex-1 py-1.5 flex justify-center rounded ${selectedElement.style.textAlign === align ? 'bg-indigo-500/30 text-indigo-300' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                            className={`px-4 py-1.5 flex justify-center rounded-lg transition-colors ${selectedElement.style.textAlign === align ? 'bg-indigo-500/30 text-indigo-300' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
                           >
                             {align === 'left' && <AlignLeft size={14} />}
                             {align === 'center' && <AlignCenter size={14} />}
