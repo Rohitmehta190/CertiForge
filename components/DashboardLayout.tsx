@@ -79,6 +79,15 @@ const navigation = [
       </svg>
     ),
   },
+  {
+    name: "Subscription",
+    href: "/subscription",
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -142,26 +151,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   prefetch={true}
                   className={`
                     group flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium rounded-xl transition-all duration-200
-                    ${
-                      isActive
-                        ? "text-white"
-                        : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
+                    ${isActive
+                      ? "text-white"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
                     }
                   `}
                   style={
                     isActive
                       ? {
-                          background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
-                          border: "1px solid rgba(99,102,241,0.2)",
-                        }
+                        background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))",
+                        border: "1px solid rgba(99,102,241,0.2)",
+                      }
                       : {}
                   }
                   onClick={() => setSidebarOpen(false)}
                 >
                   <span
-                    className={`transition-colors duration-200 ${
-                      isActive ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-400"
-                    }`}
+                    className={`transition-colors duration-200 ${isActive ? "text-indigo-400" : "text-slate-500 group-hover:text-slate-400"
+                      }`}
                   >
                     {item.icon}
                   </span>
