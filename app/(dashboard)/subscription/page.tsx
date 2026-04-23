@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, X, Shield, Zap, Target } from "lucide-react";
 
@@ -62,6 +63,7 @@ const tiers = [
 
 export default function SubscriptionPage() {
   const [annual, setAnnual] = useState(false);
+  const router = useRouter();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -154,6 +156,7 @@ export default function SubscriptionPage() {
             </div>
 
             <button
+              onClick={() => router.push(`/checkout?plan=${tier.id}&annual=${annual}`)}
               className={`
                 mt-auto w-full py-3.5 px-6 rounded-xl font-semibold transition-all duration-200 active:scale-[0.98]
                 ${tier.mostPopular 
@@ -187,6 +190,38 @@ export default function SubscriptionPage() {
           </motion.div>
         ))}
       </div>
+
+      {/* Educational Discounts Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="mt-20 max-w-5xl mx-auto rounded-3xl p-1 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20"
+      >
+        <div className="bg-slate-900/80 backdrop-blur-xl rounded-[23px] p-8 md:p-12 border border-white/5 flex flex-col md:flex-row items-center gap-10">
+          <div className="flex-1 text-center md:text-left">
+            <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">Educational Discounts</h3>
+            <p className="text-slate-400 text-lg mb-6 max-w-xl">
+              We believe in supporting education. Get special pricing whether you're an individual student or representing an entire institution.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+              <button 
+                onClick={() => router.push('/discounts/student')}
+                className="px-6 py-3 rounded-xl bg-white/5 text-white font-medium hover:bg-white/10 transition-colors border border-white/10"
+              >
+                Student Discount (50% Off)
+              </button>
+              <button 
+                onClick={() => router.push('/discounts/college')}
+                className="px-6 py-3 rounded-xl text-white font-medium transition-colors shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
+                style={{ background: "linear-gradient(135deg, var(--cf-accent-1, #6366f1), var(--cf-accent-2, #8b5cf6))" }}
+              >
+                College & Bulk Licensing
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
       
       {/* FAQ or Trust badges placeholder */}
       <motion.div 
