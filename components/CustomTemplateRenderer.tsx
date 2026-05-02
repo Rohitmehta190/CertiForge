@@ -46,7 +46,7 @@ export default function CustomTemplateRenderer({
   template, 
   certificateData 
 }: CustomTemplateRendererProps) {
-  // Replace dynamic content
+  // Helper function to replace dynamic placeholders with actual content
   const processContent = (content: string) => {
     return content
       .replace(/\{\{name\}\}/g, certificateData.name)
