@@ -86,7 +86,7 @@ export default function VerifyHomePage() {
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="text-green-400 mt-1">•</span>
-                  <p>Certificate IDs typically start with "CERT-" followed by alphanumeric characters</p>
+                  <p>Certificate IDs typically start with &quot;CERT-&quot; followed by alphanumeric characters</p>
                 </div>
                 <div className="flex items-start space-x-3">
                   <span className="text-green-400 mt-1">•</span>

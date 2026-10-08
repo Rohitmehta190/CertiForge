@@ -183,9 +183,8 @@ export default function CertificateViewPage() {
                   </div>
                 </div>
               </div>
-            </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {certificates.length === 0 && (
             <div className="text-center py-12">

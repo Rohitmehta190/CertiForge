@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { FirebaseService } from "@/utils/firebaseService";
 
@@ -67,7 +68,7 @@ export default function DashboardPage() {
           {/* Header */}
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-            <p className="text-zinc-400">Welcome back! Here's an overview of your certificate generation activity.</p>
+            <p className="text-zinc-400">Welcome back! Here&apos;s an overview of your certificate generation activity.</p>
           </div>
 
           {/* Stats Grid */}
@@ -102,7 +103,7 @@ export default function DashboardPage() {
               <p className="text-zinc-400 mb-6">
                 Upload a CSV file with recipient information to generate certificates in bulk.
               </p>
-              <a
+              <Link
                 href="/upload"
                 className="inline-flex items-center px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium"
               >
@@ -110,7 +111,7 @@ export default function DashboardPage() {
                 <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 hover:border-zinc-700 transition-all duration-300">
@@ -121,7 +122,7 @@ export default function DashboardPage() {
               <p className="text-zinc-400 mb-6">
                 Browse, search, and manage all your generated certificates.
               </p>
-              <a
+              <Link
                 href="/certificates"
                 className="inline-flex items-center px-4 py-2 border border-zinc-700 text-white rounded-lg hover:bg-zinc-800 transition-colors font-medium"
               >
@@ -129,7 +130,7 @@ export default function DashboardPage() {
                 <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
 

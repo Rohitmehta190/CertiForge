@@ -191,7 +191,7 @@ export class CertificateGenerator {
 
       // Override html2canvas to prevent lab() color function errors
       if (typeof window !== 'undefined') {
-        (window as any).__html2canvas_force_simplified_colors__ = true;
+        (window as unknown as Record<string, unknown>).__html2canvas_force_simplified_colors__ = true;
       }
 
       const canvas = await html2canvas(element, {

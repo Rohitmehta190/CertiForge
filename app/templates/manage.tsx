@@ -88,6 +88,8 @@ export default function TemplateManagePage() {
   useEffect(() => {
     const saved = localStorage.getItem('selectedTemplate');
     if (saved) {
+      // localStorage is only available after mount
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedTemplate(saved);
     }
   }, []);
