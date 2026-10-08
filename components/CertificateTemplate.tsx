@@ -100,6 +100,7 @@ export default function CertificateTemplate({
                 <div className="text-center">
                   {qrCodeUrl && (
                     <div className="mb-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- QR data URL captured by html2canvas */}
                       <img src={qrCodeUrl} alt="QR Code" className="w-20 h-20 mx-auto" />
                     </div>
                   )}
@@ -146,6 +147,7 @@ export default function CertificateTemplate({
                 <div className="text-center">
                   {qrCodeUrl && (
                     <div className="mb-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- QR data URL captured by html2canvas */}
                       <img src={qrCodeUrl} alt="QR Code" className="w-16 h-16 mx-auto" />
                     </div>
                   )}
