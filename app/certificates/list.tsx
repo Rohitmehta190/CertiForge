@@ -85,7 +85,7 @@ export default function CertificatesListPage() {
                     </div>
                     <div className="text-right">
                       <span className="text-xs text-zinc-500">
-                        {certificate.createdAt?.toDate?.toLocaleDateString() || "N/A"}
+                        {certificate.createdAt?.toDate?.()?.toLocaleDateString() || "N/A"}
                       </span>
                     </div>
                   </div>
@@ -147,8 +147,8 @@ export default function CertificatesListPage() {
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {certificates.length === 0 && (
             <div className="text-center py-12">

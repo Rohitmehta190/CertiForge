@@ -157,11 +157,7 @@ export class CertificateGenerator {
     }
   }
 
-  private static async generateCertificatePDF(
-    element: HTMLElement,
-    data: CertificateData,
-    options: CertificateOptions
-  ): Promise<Blob> {
+  private static async generateCertificatePDF(element: HTMLElement): Promise<Blob> {
     try {
       // Inject CSS fix to prevent lab() color function errors
       if (typeof document !== 'undefined') {
@@ -191,7 +187,7 @@ export class CertificateGenerator {
 
       // Override html2canvas to prevent lab() color function errors
       if (typeof window !== 'undefined') {
-        (window as any).__html2canvas_force_simplified_colors__ = true;
+        (window as unknown as Record<string, unknown>).__html2canvas_force_simplified_colors__ = true;
       }
 
       const canvas = await html2canvas(element, {
@@ -251,7 +247,7 @@ export class CertificateGenerator {
     document.body.appendChild(certificateElement);
 
     try {
-      const pdfBlob = await this.generateCertificatePDF(certificateElement, data, options);
+      const pdfBlob = await this.generateCertificatePDF(certificateElement);
       return { certificateId, pdfBlob };
     } finally {
       document.body.removeChild(certificateElement);

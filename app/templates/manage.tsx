@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface Template {
   id: string;
@@ -38,7 +37,6 @@ const defaultTemplates: Template[] = [
 ];
 
 export default function TemplateManagePage() {
-  const { user } = useAuth();
   const [templates, setTemplates] = useState<Template[]>(defaultTemplates);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("default");
   const [isCreating, setIsCreating] = useState(false);
@@ -88,6 +86,8 @@ export default function TemplateManagePage() {
   useEffect(() => {
     const saved = localStorage.getItem('selectedTemplate');
     if (saved) {
+      // localStorage is only available after mount
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedTemplate(saved);
     }
   }, []);

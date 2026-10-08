@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
-import { db } from "@/firebase/config";
-import { collection, getDocs, query } from "firebase/firestore";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { FirebaseService } from "@/utils/firebaseService";
 
 interface Stats {
   totalCertificates: number;
@@ -13,6 +14,7 @@ interface Stats {
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<Stats>({
     totalCertificates: 0,
     activeTemplates: 0,
@@ -21,33 +23,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
+
     const fetchStats = async () => {
       try {
-        // Fetch certificates count
-        const certificatesQuery = query(collection(db, "certificates"));
-        const certificatesSnapshot = await getDocs(certificatesQuery);
-        const totalCertificates = certificatesSnapshot.size;
-
-        // Fetch templates count
-        const templatesQuery = query(collection(db, "templates"));
-        const templatesSnapshot = await getDocs(templatesQuery);
-        const activeTemplates = templatesSnapshot.size;
-
-        // Fetch unique recipients count
-        const recipientsSet = new Set();
-        certificatesSnapshot.forEach((doc) => {
-          const data = doc.data() as { email?: string };
-          if (data.email) {
-            recipientsSet.add(data.email);
-          }
-        });
-        const totalRecipients = recipientsSet.size;
-
-        setStats({
-          totalCertificates,
-          activeTemplates,
-          totalRecipients,
-        });
+        setStats(await FirebaseService.getStats(user.uid));
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {
@@ -56,7 +36,7 @@ export default function DashboardPage() {
     };
 
     fetchStats();
-  }, []);
+  }, [user]);
 
   const StatCard = ({ title, value, icon, loading }: { 
     title: string; 
@@ -88,7 +68,7 @@ export default function DashboardPage() {
           {/* Header */}
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-            <p className="text-zinc-400">Welcome back! Here's an overview of your certificate generation activity.</p>
+            <p className="text-zinc-400">Welcome back! Here&apos;s an overview of your certificate generation activity.</p>
           </div>
 
           {/* Stats Grid */}
@@ -123,7 +103,7 @@ export default function DashboardPage() {
               <p className="text-zinc-400 mb-6">
                 Upload a CSV file with recipient information to generate certificates in bulk.
               </p>
-              <a
+              <Link
                 href="/upload"
                 className="inline-flex items-center px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-medium"
               >
@@ -131,7 +111,7 @@ export default function DashboardPage() {
                 <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 hover:border-zinc-700 transition-all duration-300">
@@ -142,7 +122,7 @@ export default function DashboardPage() {
               <p className="text-zinc-400 mb-6">
                 Browse, search, and manage all your generated certificates.
               </p>
-              <a
+              <Link
                 href="/certificates"
                 className="inline-flex items-center px-4 py-2 border border-zinc-700 text-white rounded-lg hover:bg-zinc-800 transition-colors font-medium"
               >
@@ -150,7 +130,7 @@ export default function DashboardPage() {
                 <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
           </div>
 

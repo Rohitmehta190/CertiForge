@@ -10,7 +10,7 @@ export default function CertificateViewPage() {
   const { user } = useAuth();
   const [certificates, setCertificates] = useState<CertificateRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCertificate, setSelectedCertificate] = useState<CertificateRecord | null>(null);
+  const [, setSelectedCertificate] = useState<CertificateRecord | null>(null);
 
   useEffect(() => {
     const fetchCertificates = async () => {
@@ -183,9 +183,8 @@ export default function CertificateViewPage() {
                   </div>
                 </div>
               </div>
-            </div>
-            </div>
-          ))}
+            ))}
+          </div>
 
           {certificates.length === 0 && (
             <div className="text-center py-12">
