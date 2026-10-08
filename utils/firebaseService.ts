@@ -9,6 +9,7 @@ import {
   query, 
   where, 
   orderBy,
+  limit,
   Timestamp 
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -225,7 +226,8 @@ export class FirebaseService {
       // Try to find by certificateId field first
       const q = query(
         collection(db, "certificates"),
-        where("certificateId", "==", certificateId)
+        where("certificateId", "==", certificateId),
+        limit(1)
       );
       
       const querySnapshot = await getDocs(q);

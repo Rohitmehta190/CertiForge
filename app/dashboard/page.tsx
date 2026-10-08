@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
-import { db } from "@/firebase/config";
-import { collection, getDocs, query } from "firebase/firestore";
+import { useAuth } from "@/contexts/AuthContext";
+import { FirebaseService } from "@/utils/firebaseService";
 
 interface Stats {
   totalCertificates: number;
@@ -13,6 +13,7 @@ interface Stats {
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<Stats>({
     totalCertificates: 0,
     activeTemplates: 0,
@@ -21,33 +22,11 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) return;
+
     const fetchStats = async () => {
       try {
-        // Fetch certificates count
-        const certificatesQuery = query(collection(db, "certificates"));
-        const certificatesSnapshot = await getDocs(certificatesQuery);
-        const totalCertificates = certificatesSnapshot.size;
-
-        // Fetch templates count
-        const templatesQuery = query(collection(db, "templates"));
-        const templatesSnapshot = await getDocs(templatesQuery);
-        const activeTemplates = templatesSnapshot.size;
-
-        // Fetch unique recipients count
-        const recipientsSet = new Set();
-        certificatesSnapshot.forEach((doc) => {
-          const data = doc.data() as { email?: string };
-          if (data.email) {
-            recipientsSet.add(data.email);
-          }
-        });
-        const totalRecipients = recipientsSet.size;
-
-        setStats({
-          totalCertificates,
-          activeTemplates,
-          totalRecipients,
-        });
+        setStats(await FirebaseService.getStats(user.uid));
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {
@@ -56,7 +35,7 @@ export default function DashboardPage() {
     };
 
     fetchStats();
-  }, []);
+  }, [user]);
 
   const StatCard = ({ title, value, icon, loading }: { 
     title: string; 
